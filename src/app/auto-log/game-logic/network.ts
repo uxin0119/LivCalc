@@ -264,7 +264,7 @@ export function getNodeIcon(type: NodeType): string {
 }
 
 export function getNodeStatusColor(status: 'locked' | 'available' | 'compromised' | 'current'): 'system' | 'success' | 'warning' | 'error' {
-  const colors = {
+  const colors: Record<'locked' | 'available' | 'compromised' | 'current', 'system' | 'success' | 'warning' | 'error'> = {
     locked: 'system',
     available: 'success',
     compromised: 'warning',

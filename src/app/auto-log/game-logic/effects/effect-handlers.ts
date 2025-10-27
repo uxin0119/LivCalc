@@ -1,15 +1,16 @@
 // effects/effect-handlers.ts
 
 import { EffectContext, EffectResult, EffectHandler } from './effect-types';
+import { Player, Enemy, StatusEffect } from '../../types/game';
 import { createLog } from '../combat';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- 유틸리티 함수 ---
-function addBuff(player, buff) {
+function addBuff(player: Player, buff: StatusEffect): Player {
   return { ...player, buffs: [...player.buffs, buff] };
 }
 
-function addDebuff(enemy, debuff) {
+function addDebuff(enemy: Enemy, debuff: StatusEffect): Enemy {
   return { ...enemy, debuffs: [...enemy.debuffs, debuff] };
 }
 
@@ -20,7 +21,7 @@ function addDebuff(enemy, debuff) {
  * 공격과 방어를 동시에 수행 (ping_flood.py)
  */
 export const handleAttackAndDefend: EffectHandler = (context: EffectContext): EffectResult => {
-  let { player, enemy, logs } = context;
+  const { player, enemy, logs } = context;
   player.firewall += 3;
   logs.push(createLog('combat', `[HYBRID] Defensive flood protocol activated`));
   logs.push(createLog('combat', `[FIREWALL] +3 defense`));
@@ -32,7 +33,7 @@ export const handleAttackAndDefend: EffectHandler = (context: EffectContext): Ef
  * @fix - 이 핸들러는 이제 스레드를 직접 수정하는 대신, combat 루프에서 처리할 수 있도록 값을 반환합니다.
  */
 export const handleDefendAndThread: EffectHandler = (context: EffectContext): EffectResult => {
-  let { player, enemy, logs } = context;
+  const { player, enemy, logs } = context;
   // combat.ts에서 이 값을 사용하여 스레드를 환불합니다.
   player.threads += 1;
   logs.push(createLog('combat', `[OPTIMIZE] Efficient filtering freed up resources`));
@@ -44,7 +45,7 @@ export const handleDefendAndThread: EffectHandler = (context: EffectContext): Ef
  * 방어와 체력 회복을 동시에 수행 (access_control.sh)
  */
 export const handleDefendAndHeal: EffectHandler = (context: EffectContext): EffectResult => {
-  let { player, enemy, logs } = context;
+  const { player, enemy, logs } = context;
   const healAmount = Math.min(3, player.maxIntegrity - player.integrity);
   if (healAmount > 0) {
     player.integrity += healAmount;
@@ -85,7 +86,8 @@ export const handleScaleWithHand: EffectHandler = (context: EffectContext): Effe
  * @fix - 2장 드로우하도록 수정하고, 새로운 버프 시스템을 사용합니다.
  */
 export const handleDrawNextTurn: EffectHandler = (context: EffectContext): EffectResult => {
-  let { player, enemy, logs, process } = context;
+  let { player } = context;
+  const { enemy, logs, process } = context;
   const newBuff = {
     id: uuidv4(),
     type: 'draw_next_turn' as const,
@@ -103,7 +105,8 @@ export const handleDrawNextTurn: EffectHandler = (context: EffectContext): Effec
  * @fix - 새로운 디버프 시스템을 사용합니다.
  */
 export const handleWeakenNextAttack: EffectHandler = (context: EffectContext): EffectResult => {
-  let { player, enemy, logs, process } = context;
+  let { enemy } = context;
+  const { player, logs, process } = context;
   const newDebuff = {
     id: uuidv4(),
     type: 'weaken' as const,
@@ -122,7 +125,8 @@ export const handleWeakenNextAttack: EffectHandler = (context: EffectContext): E
  * @fix - 새로운 버프 시스템을 사용합니다.
  */
 export const handleBuffNextAttack: EffectHandler = (context: EffectContext): EffectResult => {
-  let { player, enemy, logs, process } = context;
+  let { player } = context;
+  const { enemy, logs, process } = context;
   const newBuff = {
     id: uuidv4(),
     type: 'damage_boost' as const,
@@ -137,7 +141,8 @@ export const handleBuffNextAttack: EffectHandler = (context: EffectContext): Eff
 };
 
 export const handleMemoryLeak: EffectHandler = (context: EffectContext): EffectResult => {
-  let { player, enemy, logs, process } = context;
+  let { player } = context;
+  const { enemy, logs, process } = context;
   const newBuff = {
     id: uuidv4(),
     type: 'damage_boost' as const,

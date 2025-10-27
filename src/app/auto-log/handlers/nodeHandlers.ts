@@ -136,7 +136,7 @@ export function handleRestChoice(
   gameState: GameState
 ): RestChoiceResult {
   const logs: LogEntry[] = [];
-  let updatedPlayer = { ...gameState.player };
+  const updatedPlayer = { ...gameState.player };
 
   switch (choice) {
     case 1: // 시스템 회복

@@ -19,7 +19,10 @@ export const ENEMIES: Enemy[] = [
     description: 'Development test server. Very weak defenses.',
     vulnerabilities: ['WEB'],
     weaknesses: ['SYSTEM', 'NETWORK'],
-    resistances: []
+    resistances: [],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
   {
     id: 'http_server',
@@ -35,7 +38,10 @@ export const ENEMIES: Enemy[] = [
     description: 'Basic HTTP server. No special defenses.',
     vulnerabilities: ['NETWORK'],
     weaknesses: ['WEB'],
-    resistances: []
+    resistances: [],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
 
   // Tier 2: 초급 (약함)
@@ -53,7 +59,10 @@ export const ENEMIES: Enemy[] = [
     description: 'Outdated database server. Weak to SQL attacks.',
     vulnerabilities: ['WEB'],
     weaknesses: ['SYSTEM'],
-    resistances: ['NETWORK']
+    resistances: ['NETWORK'],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
   {
     id: 'web_app_server',
@@ -69,7 +78,10 @@ export const ENEMIES: Enemy[] = [
     description: 'Web application server. Vulnerable to web exploits.',
     vulnerabilities: ['WEB'],
     weaknesses: ['NETWORK'],
-    resistances: ['SYSTEM']
+    resistances: ['SYSTEM'],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
 
   // Tier 3: 중급 (보통)
@@ -87,7 +99,10 @@ export const ENEMIES: Enemy[] = [
     description: 'Old C++ application. Memory vulnerabilities.',
     vulnerabilities: ['SYSTEM'],
     weaknesses: ['WEB'],
-    resistances: ['NETWORK']
+    resistances: ['NETWORK'],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
   {
     id: 'api_gateway',
@@ -103,7 +118,10 @@ export const ENEMIES: Enemy[] = [
     description: 'API gateway. Weak to network attacks.',
     vulnerabilities: ['NETWORK'],
     weaknesses: ['WEB'],
-    resistances: ['SYSTEM']
+    resistances: ['SYSTEM'],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
 
   // Tier 4: 고급 (강함)
@@ -121,7 +139,10 @@ export const ENEMIES: Enemy[] = [
     description: 'File server. Vulnerable to file inclusion.',
     vulnerabilities: ['NETWORK'],
     weaknesses: ['SYSTEM'],
-    resistances: ['WEB']
+    resistances: ['WEB'],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
   {
     id: 'auth_server',
@@ -137,7 +158,10 @@ export const ENEMIES: Enemy[] = [
     description: 'Authentication server. Strong against web attacks.',
     vulnerabilities: ['SYSTEM'],
     weaknesses: ['NETWORK'],
-    resistances: ['WEB']
+    resistances: ['WEB'],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   }
 ];
 
@@ -158,7 +182,10 @@ export const ELITE_ENEMIES: Enemy[] = [
     description: 'Heavily secured server. Defensive pattern.',
     vulnerabilities: [],
     weaknesses: ['SYSTEM', 'WEB'],
-    resistances: ['NETWORK']
+    resistances: ['NETWORK'],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
   {
     id: 'microservice_cluster',
@@ -175,7 +202,10 @@ export const ELITE_ENEMIES: Enemy[] = [
     description: 'Distributed microservices. Aggressive attacks.',
     vulnerabilities: ['NETWORK'],
     weaknesses: ['WEB'],
-    resistances: []
+    resistances: [],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   },
   {
     id: 'security_bot',
@@ -192,7 +222,10 @@ export const ELITE_ENEMIES: Enemy[] = [
     description: 'AI-powered security. Balanced offense and defense.',
     vulnerabilities: ['SYSTEM'],
     weaknesses: ['WEB', 'NETWORK'],
-    resistances: []
+    resistances: [],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   }
 ];
 
@@ -215,7 +248,10 @@ export const BOSS_ENEMIES: Enemy[] = [
     description: 'Central mainframe. Multiple attack phases.',
     vulnerabilities: ['WEB', 'SYSTEM', 'NETWORK'], // 모든 속성에 약함
     weaknesses: [],
-    resistances: []
+    resistances: [],
+    firewall: 0,
+    buffs: [],
+    debuffs: []
   }
 ];
 

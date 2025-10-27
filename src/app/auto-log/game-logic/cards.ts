@@ -1,6 +1,8 @@
 // 프로세스 정의 및 관리
 
-import { Process } from '../types/game';
+import { Process, Player, Enemy } from '../types/game';
+import { effectRegistry } from './effects/effect-registry';
+import { createLog } from './combat';
 
 export const BASE_PROCESSES: Process[] = [
   // 저코스트 공격 프로세스
@@ -268,10 +270,6 @@ export function drawProcesses(library: Process[], count: number): { drawn: Proce
   return { drawn, remaining };
 }
 
-import { Process, Player, Enemy } from '../types/game';
-import { effectRegistry } from './effects/effect-registry';
-import { createLog } from './combat';
-
 // 프로세스 효과 실행 (리팩토링된 버전)
 export function executeProcessEffect(
   process: Process,
@@ -290,7 +288,7 @@ export function executeProcessEffect(
   // 1. 기본 효과 적용 (공격, 방어, 힐)
   switch (process.type) {
     case 'attack': {
-      let damage = process.throughput;
+      const damage = process.throughput;
       let multiplier = 1.0;
       let matchType = '';
 

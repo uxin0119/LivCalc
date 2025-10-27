@@ -1,6 +1,7 @@
 // 명령어 핸들러 모듈
 
 import { GameState, LogEntry, Process, NetworkNode } from '../types/game';
+import { EventChoice } from './events';
 import { createLog } from './combat';
 import { getEffectiveMaxIntegrity, getEffectiveMaxThreads } from './itemEffects';
 import {
@@ -750,7 +751,7 @@ export function handleShopCommands(cmd: string, gameState: GameState): CommandRe
     const itemName = cmd.substring('buy '.length).trim();
     if (itemName && gameState.shopInventory) {
       const itemIndex = gameState.shopInventory.findIndex(item => {
-        return item.name.toLowerCase() === itemName.toLowerCase();
+        return item.item.name.toLowerCase() === itemName.toLowerCase();
       });
       if (itemIndex !== -1) {
         return {
@@ -780,7 +781,7 @@ export function handleShopCommands(cmd: string, gameState: GameState): CommandRe
 export function handleEventCommands(cmd: string, gameState: GameState): CommandResult {
   if (gameState.currentEvent) {
     const choiceTextSlug = cmd.toLowerCase();
-    const choiceIndex = gameState.currentEvent.choices.findIndex(choice => 
+    const choiceIndex = gameState.currentEvent.choices.findIndex((choice: EventChoice) =>
       choice.command.toLowerCase() === choiceTextSlug
     );
 

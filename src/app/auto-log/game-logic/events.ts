@@ -45,6 +45,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'accept',
         text: 'Accept the deal',
+        command: 'accept',
         outcome: {
           type: 'mixed',
           description: 'You lose half your integrity but gain a powerful rare process',
@@ -54,6 +55,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'decline',
         text: 'Decline and move on',
+        command: 'decline',
         outcome: {
           type: 'gain_integrity',
           value: 5,
@@ -79,6 +81,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'accept_contract',
         text: 'Accept the contract',
+        command: 'accept_contract',
         outcome: {
           type: 'start_combat',
           combatDifficulty: 'elite',
@@ -88,6 +91,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'decline_contract',
         text: 'Decline the contract',
+        command: 'decline_contract',
         outcome: {
           type: 'gain_btc',
           value: 5,
@@ -113,6 +117,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'sell_process',
         text: 'Sell a random process',
+        command: 'sell_process',
         outcome: {
           type: 'lose_process',
           value: 15, // BTC gained
@@ -122,6 +127,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'keep_processes',
         text: 'Keep your processes',
+        command: 'keep_processes',
         outcome: {
           type: 'gain_btc',
           value: 3,
@@ -183,6 +189,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'download',
         text: 'Download the exploit',
+        command: 'download',
         outcome: {
           type: 'mixed',
           description: '50% chance: Powerful exploit OR Malware infection',
@@ -192,6 +199,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'report',
         text: 'Report to authorities',
+        command: 'report',
         outcome: {
           type: 'gain_btc',
           value: 12,
@@ -234,6 +242,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'report_vuln',
         text: 'Report to bug bounty program',
+        command: 'report_vuln',
         outcome: {
           type: 'gain_btc',
           value: 20,
@@ -243,6 +252,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'exploit_vuln',
         text: 'Weaponize the vulnerability',
+        command: 'exploit_vuln',
         outcome: {
           type: 'gain_process',
           description: 'Gained a powerful attack process, but at what cost?'
@@ -267,6 +277,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'pay_ransom',
         text: 'Pay the ransom',
+        command: 'pay_ransom',
         outcome: {
           type: 'lose_btc',
           value: 15,
@@ -276,6 +287,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'fight_back',
         text: 'Trace and counterattack',
+        command: 'fight_back',
         outcome: {
           type: 'start_combat',
           combatDifficulty: 'normal',
@@ -301,6 +313,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'trade',
         text: 'Trade a common for a rare',
+        command: 'trade',
         outcome: {
           type: 'mixed',
           description: 'Traded a random process for a rare one!'
@@ -309,6 +322,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'no_trade',
         text: 'Decline the trade',
+        command: 'no_trade',
         outcome: {
           type: 'gain_consumable',
           description: 'The trader gives you a consumable as a gesture of goodwill.'
@@ -333,6 +347,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'steal_data',
         text: 'Extract valuable data',
+        command: 'steal_data',
         outcome: {
           type: 'gain_btc',
           value: 18,
@@ -342,6 +357,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'leave_note',
         text: 'Leave anonymous security tip',
+        command: 'leave_note',
         outcome: {
           type: 'gain_integrity',
           value: 15,
@@ -367,6 +383,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'execute',
         text: 'Execute the packet',
+        command: 'execute',
         outcome: {
           type: 'mixed',
           value: 50, // 50% good, 50% bad
@@ -376,6 +393,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'destroy',
         text: 'Safely destroy it',
+        command: 'destroy',
         outcome: {
           type: 'gain_integrity',
           value: 8,
@@ -401,6 +419,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'join_apt',
         text: 'Join the APT group',
+        command: 'join_apt',
         outcome: {
           type: 'mixed',
           description: 'Gained powerful tools, but you\'re being watched...'
@@ -409,6 +428,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'decline_apt',
         text: 'Politely decline',
+        command: 'decline_apt',
         outcome: {
           type: 'gain_btc',
           value: 10,
@@ -434,6 +454,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'sell_bulk',
         text: 'Sell 3 processes',
+        command: 'sell_bulk',
         outcome: {
           type: 'mixed',
           value: 25, // BTC value
@@ -443,6 +464,7 @@ export const ALL_EVENTS: GameEvent[] = [
       {
         id: 'keep_all',
         text: 'Keep your arsenal',
+        command: 'keep_all',
         outcome: {
           type: 'gain_consumable',
           description: 'The broker gives you a sample product.'

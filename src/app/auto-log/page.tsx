@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Terminal from './components/Terminal';
 import CommandInput, { CommandInputRef } from './components/CommandInput';
-import { GameState, LogEntry, Process } from './types/game';
+import { GameState, LogEntry, Process, ItemEffect } from './types/game';
+import { EventChoice } from './game-logic/events';
 import { getRandomEnemy, getEnemyNextAction } from './game-logic/enemies';
 import {
   initializeCombat,
@@ -36,7 +37,7 @@ import {
   handleEventCommands,
   handleRestCommands
 } from './game-logic/commands';
-import { getAvailableNodes, handleConnect as processConnect } from './game-logic/network';
+import { getAvailableNodes, handleConnect as processConnect, completeNode } from './game-logic/network';
 import {
   showShopInventory as getShopInventoryLogs,
   handleShopPurchase as processPurchase,
@@ -109,13 +110,13 @@ export default function AutoLogGame() {
           createLog('success', `[SELECTED] ${selectedItem.icon} ${selectedItem.name}`),
           createLog('system', `[EQUIPPED] ${selectedItem.description}`),
         ];
-        const integrityEffect = selectedItem.effects.find(e => e.type === 'max_integrity');
+        const integrityEffect = selectedItem.effects.find((e: ItemEffect) => e.type === 'max_integrity');
         if (integrityEffect) {
           const oldEffectiveMax = getEffectiveMaxIntegrity(gameState.player);
           const newEffectiveMax = getEffectiveMaxIntegrity(playerWithItem);
           logs.push(createLog('success', `[INTEGRITY] Healed: +${integrityEffect.value} | Max Integrity: ${oldEffectiveMax} → ${newEffectiveMax}` ));
         }
-        const threadsEffect = selectedItem.effects.find(e => e.type === 'max_threads');
+        const threadsEffect = selectedItem.effects.find((e: ItemEffect) => e.type === 'max_threads');
         if (threadsEffect) {
           logs.push(createLog('success', `[THREADS] Max +${threadsEffect.value} (${gameState.player.maxThreads} → ${playerWithItem.maxThreads})`));
         }
@@ -464,7 +465,7 @@ export default function AutoLogGame() {
         ]
       : []),
     ...(gameState.phase === 'event' && gameState.currentEvent
-        ? gameState.currentEvent.choices.map(choice => `/${choice.command} - ${choice.text}`)
+        ? gameState.currentEvent.choices.map((choice: EventChoice) => `/${choice.command} - ${choice.text}`)
         : []
     ),
   ];

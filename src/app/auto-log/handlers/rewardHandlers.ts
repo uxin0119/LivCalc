@@ -129,7 +129,7 @@ export function generateCombatRewards(enemy: any, playerItems: Item[]): {
 
 // 보상 선택 처리
 export function selectReward(selectedReward: RewardOption, player: any): { logs: LogEntry[], updatedPlayer: any } {
-    let updatedPlayer = { ...player };
+    const updatedPlayer = { ...player };
     let logMessage = '';
 
     if ('type' in selectedReward) {
@@ -146,11 +146,11 @@ export function selectReward(selectedReward: RewardOption, player: any): { logs:
                 logMessage = `[SELECTED] Gained ${(selectedReward as any).value} BTC!`;
                 break;
             default:
-                if ('rarity' in selectedReward) { // Item
-                    updatedPlayer.items = [...updatedPlayer.items, selectedReward as Item];
+                if ('effects' in selectedReward) { // Item
+                    updatedPlayer.items = [...updatedPlayer.items, selectedReward as unknown as Item];
                     logMessage = `[SELECTED] Equipped item "${selectedReward.name}"!`;
                 } else { // Consumable
-                    updatedPlayer.consumables = [...updatedPlayer.consumables, selectedReward as Consumable];
+                    updatedPlayer.consumables = [...updatedPlayer.consumables, selectedReward as unknown as Consumable];
                     logMessage = `[SELECTED] Acquired consumable "${selectedReward.name}"!`;
                 }
                 break;

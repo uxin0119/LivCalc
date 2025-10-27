@@ -1,6 +1,6 @@
 // 전투 시스템 로직
 
-import { Player, Enemy, Process, LogEntry } from '../types/game';
+import { Player, Enemy, Process, LogEntry, StatusEffect } from '../types/game';
 import { executeProcessEffect } from './cards';
 import { executeEnemyAction, getEnemyNextAction } from './enemies';
 import {
@@ -74,7 +74,7 @@ export function startTurn(player: Player, enemy: Enemy): {
   // 1. 상태 효과 처리 (지속시간 감소, 턴 시작 효과 적용)
   const statusResult = processStatusEffects(player, enemy);
   let updatedPlayer = statusResult.player;
-  let updatedEnemy = statusResult.enemy;
+  const updatedEnemy = statusResult.enemy;
   turnLogs.push(...statusResult.logs);
 
   // 2. 스레드 리셋
@@ -136,7 +136,7 @@ export function playProcess(
   logs.push(createLog('player', `[COMMAND] > ${process.executable}`));
   logs.push(createLog('system', `[PROCESSING] Running ${process.executable}...`));
 
-  let playerAfterCost = { ...player, threads: player.threads - adjustedCycles };
+  const playerAfterCost = { ...player, threads: player.threads - adjustedCycles };
 
   // 공격 전 버프 적용 (damage_boost)
   let throughput = process.throughput;
@@ -188,7 +188,7 @@ export function executeEnemyTurn(
   isPlayerDefeated: boolean;
 } {
   const logs: LogEntry[] = [];
-  let updatedEnemy = { ...enemy }; // 적 턴 시작 시 방어력 초기화 제거
+  const updatedEnemy = { ...enemy }; // 적 턴 시작 시 방어력 초기화 제거
 
   logs.push(createLog('system', ''));
   logs.push(createLog('error', '[SERVER_RESPONSE] ========== COUNTER-ATTACK =========='));
@@ -267,8 +267,8 @@ function processStatusEffects(player: Player, enemy: Enemy): {
   logs: LogEntry[];
 } {
   const logs: LogEntry[] = [];
-  let updatedPlayer = { ...player };
-  let updatedEnemy = { ...enemy };
+  const updatedPlayer = { ...player };
+  const updatedEnemy = { ...enemy };
 
   // 지속시간 1 감소 및 만료된 효과 제거
   const updateEffects = (effects: StatusEffect[]) => {
