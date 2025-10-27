@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/username/Desktop",
+        "/path/to/other/allowed/dir"
+      ]
+    },
+    "vercel": {
+      "command": "node",
+      "args": ["./mcp-vercel.js"],
+      "env": {
+        "VERCEL_TOKEN": "NBGboiCX1gSo9xy5u1hkEje2"
+      }
+    },
+    "lighthouse": {
+      "command": "npx",
+      "args": ["lighthouse-mcp"],
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

@@ -1,0 +1,16 @@
+/**
+ * 아이템 포맷
+ */
+type CalcData = {
+    id: string;
+    name: string;
+    value: number;
+    type: string;
+    category: "fixed" | "daily";
+    currency?: "KRW" | "USD" | "JPY";
+    isActive?: boolean;
+    activationDate?: string;  // ISO 8601 날짜 문자열
+    deactivationDate?: string;  // ISO 8601 날짜 문자열
+    hasSchedule?: boolean;  // 스케줄링 기능 사용 여부
+};
+export default CalcData;

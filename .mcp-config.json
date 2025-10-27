@@ -1,0 +1,45 @@
+{
+  "filesystem": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "C:/picoshop/workspace"
+    ]
+  },
+  "memory": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-memory"
+    ]
+  },
+  "puppeteer": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@hisma/server-puppeteer"
+    ]
+  },
+  "everything": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-everything"
+    ]
+  },
+  "crawler": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "mcp-smart-crawler"
+    ]
+  },
+  "sequential-thinking": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-sequential-thinking"
+    ]
+  }
+}
