@@ -10,7 +10,6 @@ import useCalcStore from './store';
 import CInputCurrency from "@/app/common/ui/CInputCurrency";
 import Icon_x from "@/app/common/icon/icon_x";
 import Modal from "@/app/common/components/Modal";
-import SchedulingModal from "@/app/common/components/SchedulingModal";
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 
 
@@ -48,7 +47,6 @@ const CalcItem: React.FC<CalcItemProps> = ({
 
     const { updateItemField, updateItemFields, removeItem } = useCalcStore();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isSchedulingOpen, setIsSchedulingOpen] = useState(false);
 
     const getTypeLabel = (typeValue: string): string => {
         return typeValue === "plus" ? "수입(+)" : "지출(-)";
@@ -107,7 +105,7 @@ const CalcItem: React.FC<CalcItemProps> = ({
                 >
                     <div className="space-y-4 sm:space-y-6">
                         {/* 항목명 표시 */}
-                        <div className="text-center p-2 sm:p-4 bg-gray-50 rounded-xl">
+                        <div className="text-center p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                             <h2 className={TokenStyles.modal.itemTitle}>
                                 {item.name || "이름 없는 항목"}
                             </h2>
@@ -117,7 +115,7 @@ const CalcItem: React.FC<CalcItemProps> = ({
                         {/* 활성화/비활성화 설정 */}
                         <div>
                             <h3 className={TokenStyles.modal.sectionTitle}>아이템 상태</h3>
-                            <div className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 rounded-xl">
+                            <div className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                                 <div className="flex flex-col">
                                     <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
                                         {item.isActive ? '활성화됨' : '비활성화됨'}
@@ -126,13 +124,13 @@ const CalcItem: React.FC<CalcItemProps> = ({
                                         {item.isActive ? '계산에 포함됩니다' : '계산에서 제외됩니다'}
                                     </span>
                                 </div>
-                                <div 
-                                    className={'relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ' + (item.isActive ? 'bg-gray-900' : 'bg-gray-300')}
+                                <div
+                                    className={'relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ' + (item.isActive ? 'bg-gray-900' : 'bg-gray-300 dark:bg-gray-600')}
                                     onClick={() => {
                                         updateItemField(item.id, 'isActive', !item.isActive);
                                     }}
                                 >
-                                    <div 
+                                    <div
                                         className={'h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ' + (item.isActive ? 'translate-x-6' : 'translate-x-0')}
                                     />
                                 </div>
@@ -150,7 +148,7 @@ const CalcItem: React.FC<CalcItemProps> = ({
                                     onClick={() => {
                                         updateItemField(item.id, 'type', 'plus');
                                     }}
-                                    className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'plus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 text-gray-900 border-gray-300 hover:border-gray-500 hover:bg-gray-100')}
+                                    className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'plus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600')}
                                 >
                                     ✚ 수입으로 설정
                                 </CButton>
@@ -158,7 +156,7 @@ const CalcItem: React.FC<CalcItemProps> = ({
                                     onClick={() => {
                                         updateItemField(item.id, 'type', 'minus');
                                     }}
-                                    className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'minus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 text-gray-900 border-gray-300 hover:border-gray-500 hover:bg-gray-100')}
+                                    className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'minus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600')}
                                 >
                                     − 지출로 설정
                                 </CButton>
@@ -166,39 +164,6 @@ const CalcItem: React.FC<CalcItemProps> = ({
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                                 현재: {item.type === 'plus' ? '수입' : '지출'}
                             </p>
-                        </div>
-
-                        {/* 스케줄 설정 */}
-                        <div>
-                            <h3 className={TokenStyles.modal.sectionTitle}>스케줄 설정</h3>
-                            <div className="p-2 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex flex-col">
-                                        <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
-                                            {item.hasSchedule ? '스케줄 활성화됨' : '스케줄 비활성화됨'}
-                                        </span>
-                                        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                                            {item.hasSchedule ? '설정된 날짜에 자동 활성화/비활성화' : '수동으로 상태 관리'}
-                                        </span>
-                                    </div>
-                                    <CButton
-                                        onClick={() => setIsSchedulingOpen(true)}
-                                        className="py-1 sm:py-2 px-2 sm:px-3 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-600 dark:border-gray-500 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 font-medium transition-all duration-200 text-xs sm:text-sm"
-                                    >
-                                        📅 설정
-                                    </CButton>
-                                </div>
-                                {item.hasSchedule && (
-                                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                                        {item.activationDate && (
-                                            <div>활성화: {new Date(item.activationDate).toLocaleDateString('ko-KR')}</div>
-                                        )}
-                                        {item.deactivationDate && (
-                                            <div>비활성화: {new Date(item.deactivationDate).toLocaleDateString('ko-KR')}</div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
                         {/* 삭제 */}
@@ -219,24 +184,6 @@ const CalcItem: React.FC<CalcItemProps> = ({
                         </div>
                     </div>
                 </Modal>
-
-                {/* 스케줄링 모달 */}
-                <SchedulingModal
-                    isOpen={isSchedulingOpen}
-                    onClose={() => setIsSchedulingOpen(false)}
-                    onSave={(scheduleData) => {
-                        updateItemFields(item.id, {
-                            hasSchedule: scheduleData.hasSchedule,
-                            activationDate: scheduleData.activationDate,
-                            deactivationDate: scheduleData.deactivationDate
-                        });
-                    }}
-                    initialData={{
-                        hasSchedule: item.hasSchedule,
-                        activationDate: item.activationDate,
-                        deactivationDate: item.deactivationDate
-                    }}
-                />
             </div>
         );
     }
@@ -316,17 +263,17 @@ const CalcItem: React.FC<CalcItemProps> = ({
             >
                 <div className="space-y-4 sm:space-y-6">
                     {/* 항목명 표시 */}
-                    <div className="text-center p-2 sm:p-4 bg-gray-50 rounded-xl">
+                    <div className="text-center p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                         <h2 className={TokenStyles.modal.itemTitle}>
                             {item.name || "이름 없는 항목"}
                         </h2>
-                        <p className="text-xs sm:text-sm text-gray-600 mt-1">현재 설정을 수정할 수 있습니다</p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">현재 설정을 수정할 수 있습니다</p>
                     </div>
 
                     {/* 활성화/비활성화 설정 */}
                     <div>
-                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">아이템 상태</h3>
-                        <div className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 rounded-xl">
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">아이템 상태</h3>
+                        <div className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                             <div className="flex flex-col">
                                 <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
                                     {item.isActive ? '활성화됨' : '비활성화됨'}
@@ -335,13 +282,13 @@ const CalcItem: React.FC<CalcItemProps> = ({
                                     {item.isActive ? '계산에 포함됩니다' : '계산에서 제외됩니다'}
                                 </span>
                             </div>
-                            <div 
-                                className={'relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ' + (item.isActive ? 'bg-gray-900' : 'bg-gray-300')}
+                            <div
+                                className={'relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ' + (item.isActive ? 'bg-gray-900' : 'bg-gray-300 dark:bg-gray-600')}
                                 onClick={() => {
                                     updateItemField(item.id, 'isActive', !item.isActive);
                                 }}
                             >
-                                <div 
+                                <div
                                     className={'h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ' + (item.isActive ? 'translate-x-6' : 'translate-x-0')}
                                 />
                             </div>
@@ -353,13 +300,13 @@ const CalcItem: React.FC<CalcItemProps> = ({
 
                     {/* 수입/지출 설정 */}
                     <div>
-                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">수입/지출 설정</h3>
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">수입/지출 설정</h3>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <CButton
                                 onClick={() => {
                                     updateItemField(item.id, 'type', 'plus');
                                 }}
-                                className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'plus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 text-gray-900 border-gray-300 hover:border-gray-500 hover:bg-gray-100')}
+                                className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'plus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600')}
                             >
                                 ✚ 수입으로 설정
                             </CButton>
@@ -367,7 +314,7 @@ const CalcItem: React.FC<CalcItemProps> = ({
                                 onClick={() => {
                                     updateItemField(item.id, 'type', 'minus');
                                 }}
-                                className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'minus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 text-gray-900 border-gray-300 hover:border-gray-500 hover:bg-gray-100')}
+                                className={'flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ' + (item.type === 'minus' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600')}
                             >
                                 − 지출로 설정
                             </CButton>
@@ -377,42 +324,9 @@ const CalcItem: React.FC<CalcItemProps> = ({
                         </p>
                     </div>
 
-                    {/* 스케줄 설정 */}
-                    <div>
-                        <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">스케줄 설정</h3>
-                        <div className="p-2 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex flex-col">
-                                    <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
-                                        {item.hasSchedule ? '스케줄 활성화됨' : '스케줄 비활성화됨'}
-                                    </span>
-                                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                                        {item.hasSchedule ? '설정된 날짜에 자동 활성화/비활성화' : '수동으로 상태 관리'}
-                                    </span>
-                                </div>
-                                <CButton
-                                    onClick={() => setIsSchedulingOpen(true)}
-                                    className="py-1 sm:py-2 px-2 sm:px-3 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 dark:bg-gray-600 dark:border-gray-500 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 font-medium transition-all duration-200 text-xs sm:text-sm"
-                                >
-                                    📅 설정
-                                </CButton>
-                            </div>
-                            {item.hasSchedule && (
-                                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                                    {item.activationDate && (
-                                        <div>활성화: {new Date(item.activationDate).toLocaleDateString('ko-KR')}</div>
-                                    )}
-                                    {item.deactivationDate && (
-                                        <div>비활성화: {new Date(item.deactivationDate).toLocaleDateString('ko-KR')}</div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
                     {/* 삭제 */}
                     <div>
-                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">위험한 작업</h3>
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">위험한 작업</h3>
                         <CButton
                             onClick={() => {
                                 removeItem(item.id);
@@ -428,24 +342,6 @@ const CalcItem: React.FC<CalcItemProps> = ({
                     </div>
                 </div>
             </Modal>
-
-            {/* 스케줄링 모달 */}
-            <SchedulingModal
-                isOpen={isSchedulingOpen}
-                onClose={() => setIsSchedulingOpen(false)}
-                onSave={(scheduleData) => {
-                    updateItemFields(item.id, {
-                        hasSchedule: scheduleData.hasSchedule,
-                        activationDate: scheduleData.activationDate,
-                        deactivationDate: scheduleData.deactivationDate
-                    });
-                }}
-                initialData={{
-                    hasSchedule: item.hasSchedule,
-                    activationDate: item.activationDate,
-                    deactivationDate: item.deactivationDate
-                }}
-            />
         </div>
     );
 }

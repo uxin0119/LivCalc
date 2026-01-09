@@ -31,7 +31,7 @@ interface CalcState {
   fixedTotal: number;
   loadFirstLivingData: () => void;
   loadDataFromSharedUrl: () => boolean;
-  addItem: (category: "fixed" | "daily", type: "plus" | "minus") => void;
+  addItem: (category: "fixed" | "daily" | "card", type: "plus" | "minus") => void;
   removeItem: (id: string) => void;
   updateItemField: <K extends keyof CalcData>(id: string, field: K, value: CalcData[K]) => void;
   updateItemFields: (id: string, fields: Partial<CalcData>) => void;

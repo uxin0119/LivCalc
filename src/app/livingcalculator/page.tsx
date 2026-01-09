@@ -81,6 +81,11 @@ export default function LivingCalculatorPage() {
                             placeholder={"금액"}
                         />
                         <ItemSection
+                            category={"card"}
+                            title={"카드 고정지출"}
+                            placeholder={"카드 금액"}
+                        />
+                        <ItemSection
                             category={"daily"}
                             title={"유동적 수입/지출"}
                             placeholder={"유동적 금액"}

@@ -6,7 +6,7 @@ type CalcData = {
     name: string;
     value: number;
     type: string;
-    category: "fixed" | "daily";
+    category: "fixed" | "daily" | "card";
     currency?: "KRW" | "USD" | "JPY";
     isActive?: boolean;
     activationDate?: string;  // ISO 8601 날짜 문자열

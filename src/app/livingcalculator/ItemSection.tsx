@@ -9,7 +9,7 @@ import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 
 interface ItemSectionProps {
-    category: "fixed" | "daily";
+    category: "fixed" | "daily" | "card";
     title: string;
     placeholder: string;
 }
