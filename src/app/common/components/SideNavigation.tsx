@@ -17,9 +17,6 @@ export default function Sidebar() {
         { url: "/livingcalculator", name: "생활비 계산기", selected: false },
         { url: "/uitest", name: "Ui Test", selected: false },
         { url: "/functiontest", name: "Function Test", selected: false },
-        { url: "/game", name: "GAME", selected: false },
-        { url: "/escape-from-terminov", name: "Escape From Terminov", selected: false },
-        { url: "/auto-log", name: "AUTO_LOG", selected: false },
         { url: "/colortokens", name: "Color Tokens", selected: false },
         { url: "/db-test", name: "DB 연결 테스트", selected: false },
     ]
