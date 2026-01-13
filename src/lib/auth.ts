@@ -4,6 +4,12 @@ import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 import { query, queryOne } from "./db";
 
+// Secret 확인 및 경고
+const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+if (!secret && process.env.NODE_ENV === 'production') {
+  console.warn('WARNING: AUTH_SECRET is not set in production environment');
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     // 이메일/비밀번호 로그인
@@ -133,5 +139,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: secret,
 });
