@@ -14,6 +14,7 @@
 DATABASE_URL=postgresql://learner:...@orb-firefly-20334.j77.aws-ap-southeast-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full
 
 NEXTAUTH_URL=https://your-domain.vercel.app
+AUTH_SECRET=your-production-secret-key-change-this
 NEXTAUTH_SECRET=your-production-secret-key-change-this
 
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -21,10 +22,17 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
 **중요:**
-- `NEXTAUTH_SECRET`은 운영 환경용으로 새로 생성해야 합니다
+- `AUTH_SECRET`은 **필수** 환경 변수입니다 (NextAuth v5)
+- `NEXTAUTH_SECRET`은 하위 호환성을 위해 포함됨
+- 운영 환경용으로 새로 생성해야 합니다
 - `NEXTAUTH_URL`은 실제 배포 도메인으로 변경해야 합니다
 
-### NEXTAUTH_SECRET 생성 방법
+⚠️ **AUTH_SECRET이 없으면:**
+- 앱이 임시 secret을 자동 생성하지만 **보안에 취약**합니다
+- 서버 재시작 시마다 모든 세션이 무효화됩니다
+- **반드시 설정하세요!**
+
+### AUTH_SECRET 생성 방법
 
 터미널에서 다음 명령어 실행:
 
@@ -62,10 +70,13 @@ ssl: {
 
 ## 배포 전 체크리스트
 
-- [ ] 모든 환경 변수가 설정되었는지 확인
-- [ ] `NEXTAUTH_SECRET`이 운영용으로 새로 생성되었는지 확인
+- [ ] `DATABASE_URL` 환경 변수 설정 확인
+- [ ] `AUTH_SECRET` 생성 및 설정 확인 (**필수!**)
+- [ ] `NEXTAUTH_SECRET` 설정 확인 (하위 호환성)
+- [ ] `NEXTAUTH_URL` 운영 도메인으로 설정
+- [ ] Google OAuth 사용 시: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` 설정
 - [ ] Google OAuth 리디렉션 URI가 운영 도메인으로 설정되었는지 확인
-- [ ] 데이터베이스 테이블이 생성되었는지 확인 (POST /api/auth/setup, POST /api/calculator/setup)
+- [ ] 데이터베이스 테이블이 생성되었는지 확인 (POST /api/setup-db, POST /api/calculator/setup)
 - [ ] 로컬에서 빌드가 성공하는지 확인 (`npm run build`)
 
 ## 데이터베이스 테이블 초기 설정
@@ -96,9 +107,21 @@ ssl: {
 
 ### 인증 오류
 
-1. NEXTAUTH_URL이 배포 도메인과 일치하는지 확인
-2. Google OAuth 리디렉션 URI가 올바른지 확인
-3. 브라우저 쿠키가 차단되지 않았는지 확인
+**"MissingSecret" 에러:**
+- `AUTH_SECRET` 환경 변수가 설정되지 않았습니다
+- Vercel/배포 플랫폼의 Environment Variables에서 `AUTH_SECRET` 추가
+- 값: `openssl rand -base64 32` 명령으로 생성한 문자열
+
+**로그인 실패:**
+1. `AUTH_SECRET`이 설정되어 있는지 확인
+2. `NEXTAUTH_URL`이 배포 도메인과 일치하는지 확인
+3. Google OAuth 리디렉션 URI가 올바른지 확인
+4. 브라우저 쿠키가 차단되지 않았는지 확인
+5. 데이터베이스 users 테이블이 생성되었는지 확인
+
+**세션이 계속 끊김:**
+- `AUTH_SECRET`이 서버 재시작마다 변경되고 있을 수 있습니다
+- 배포 환경에 `AUTH_SECRET` 환경 변수를 영구적으로 설정하세요
 
 ### 서버리스 함수 타임아웃
 

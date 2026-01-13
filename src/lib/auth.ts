@@ -3,11 +3,24 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 import { query, queryOne } from "./db";
+import crypto from "crypto";
 
-// Secret 확인 및 경고
-const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-if (!secret && process.env.NODE_ENV === 'production') {
-  console.warn('WARNING: AUTH_SECRET is not set in production environment');
+// Secret 확인 및 자동 생성
+let secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+
+if (!secret) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('CRITICAL: AUTH_SECRET environment variable is not set in production!');
+    console.error('Please set AUTH_SECRET in your deployment environment.');
+    // Production에서는 임시 secret 생성 (보안상 권장하지 않지만 크래시 방지)
+    secret = crypto.randomBytes(32).toString('base64');
+    console.warn('Using temporary generated secret - this should be replaced with a proper AUTH_SECRET');
+  } else {
+    // Development 환경에서는 자동 생성
+    secret = crypto.randomBytes(32).toString('base64');
+    console.log('Development: Using auto-generated AUTH_SECRET');
+    console.log('For production, please set AUTH_SECRET environment variable');
+  }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
