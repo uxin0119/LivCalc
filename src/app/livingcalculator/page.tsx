@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import ItemSection from "./ItemSection";
 import TotalArea from "./TotalArea";
 import { DndContext, closestCenter } from '@dnd-kit/core';
@@ -9,19 +9,26 @@ import CSection1 from "@/app/common/ui/CSection1";
 import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 import FloatingMenu from '@/app/common/components/FloatingMenu';
+import CategoryManagementModal from './CategoryManagementModal';
 import { copyShareUrlToClipboard } from '@/app/common/utils/DataSharing';
 import { useSession } from 'next-auth/react';
 
 export default function LivingCalculatorPage() {
-    const { items, loadFirstLivingData, handleDragEnd, checkAndApplyScheduling, setItems } = useCalcStore();
+    const { items, categories, loadFirstLivingData, handleDragEnd, checkAndApplyScheduling, setItems, setCategories } = useCalcStore();
     const { data: session, status } = useSession();
     const [isItemDetailOpen, setIsItemDetailOpen] = useState(false);
+    const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
     const [showExportSuccess, setShowExportSuccess] = useState(false);
     const [showSaveSuccess, setShowSaveSuccess] = useState(false);
     const [showLoadSuccess, setShowLoadSuccess] = useState(false);
     const [showError, setShowError] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // 정렬된 카테고리
+    const sortedCategories = useMemo(() => {
+        return [...categories].sort((a, b) => a.order - b.order);
+    }, [categories]);
 
     useEffect(() => {
         loadFirstLivingData();
@@ -58,7 +65,7 @@ export default function LivingCalculatorPage() {
 
     const handleExport = async () => {
         try {
-            await copyShareUrlToClipboard(items);
+            await copyShareUrlToClipboard(items, categories);
             setShowExportSuccess(true);
             setTimeout(() => setShowExportSuccess(false), 3000);
         } catch (error) {
@@ -83,7 +90,7 @@ export default function LivingCalculatorPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ data: items }),
+                body: JSON.stringify({ data: items, categories: categories }),
             });
 
             const result = await response.json();
@@ -123,6 +130,9 @@ export default function LivingCalculatorPage() {
 
             if (result.data) {
                 setItems(result.data);
+                if (result.categories && Array.isArray(result.categories) && result.categories.length > 0) {
+                    setCategories(result.categories);
+                }
                 setShowLoadSuccess(true);
                 setTimeout(() => setShowLoadSuccess(false), 3000);
             } else {
@@ -153,21 +163,16 @@ export default function LivingCalculatorPage() {
 
                     {/* 메인 컨텐츠 */}
                     <div className={`${TokenStyles.livingCalculator.container} p-4 sm:p-8`}>
-                        <ItemSection
-                            category={"fixed"}
-                            title={"고정 수입/지출"}
-                            placeholder={"금액"}
-                        />
-                        <ItemSection
-                            category={"card"}
-                            title={"카드 고정지출"}
-                            placeholder={"카드 금액"}
-                        />
-                        <ItemSection
-                            category={"daily"}
-                            title={"유동적 수입/지출"}
-                            placeholder={"유동적 금액"}
-                        />
+                        {sortedCategories.map((category) => (
+                            <ItemSection
+                                key={category.id}
+                                category={category.id}
+                                title={category.name}
+                                placeholder={"금액"}
+                                color={category.color}
+                                icon={category.icon}
+                            />
+                        ))}
                         <TotalArea />
                     </div>
                 </div>
@@ -178,6 +183,7 @@ export default function LivingCalculatorPage() {
                 onExport={handleExport}
                 onSave={status === 'authenticated' ? handleSave : undefined}
                 onLoad={status === 'authenticated' ? handleLoad : undefined}
+                onManageCategories={() => setIsCategoryManagementOpen(true)}
             />
 
             {/* 토스트 메시지들 */}
@@ -224,6 +230,12 @@ export default function LivingCalculatorPage() {
                     </div>
                 </div>
             )}
+
+            {/* 섹션 관리 모달 */}
+            <CategoryManagementModal
+                isOpen={isCategoryManagementOpen}
+                onClose={() => setIsCategoryManagementOpen(false)}
+            />
 
             <Modal
                 isOpen={isItemDetailOpen}

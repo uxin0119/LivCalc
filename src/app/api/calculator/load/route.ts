@@ -23,13 +23,30 @@ export async function GET() {
       return NextResponse.json({
         success: true,
         data: null,
+        categories: [],
         message: '저장된 데이터가 없습니다.',
       });
     }
 
+    // 데이터 형식 체크 (하위 호환성)
+    let items, categories;
+    if (Array.isArray(result.data)) {
+      // 구 형식: 배열만 있는 경우
+      items = result.data;
+      categories = [];
+    } else if (result.data && typeof result.data === 'object') {
+      // 신 형식: { items, categories } 객체
+      items = result.data.items || [];
+      categories = result.data.categories || [];
+    } else {
+      items = [];
+      categories = [];
+    }
+
     return NextResponse.json({
       success: true,
-      data: result.data,
+      data: items,
+      categories: categories,
       updatedAt: result.updated_at,
     });
   } catch (error) {

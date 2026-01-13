@@ -6,6 +6,7 @@ import LZString from 'lz-string';
 
 export interface ShareableData {
   items: any[];
+  categories?: any[];
   timestamp: number;
   version: string;
 }
@@ -13,10 +14,11 @@ export interface ShareableData {
 /**
  * 데이터를 압축하고 URL 파라미터로 사용 가능한 문자열로 변환
  */
-export const compressDataForUrl = (data: any): string => {
+export const compressDataForUrl = (data: any, categories?: any[]): string => {
   try {
     const shareData: ShareableData = {
       items: data,
+      categories: categories,
       timestamp: Date.now(),
       version: '1.0'
     };
@@ -34,7 +36,7 @@ export const compressDataForUrl = (data: any): string => {
 /**
  * 압축된 문자열을 원본 데이터로 복원
  */
-export const decompressDataFromUrl = (compressedData: string): any[] => {
+export const decompressDataFromUrl = (compressedData: string): { items: any[]; categories?: any[] } => {
   try {
     const decompressed = LZString.decompressFromEncodedURIComponent(compressedData);
 
@@ -54,7 +56,10 @@ export const decompressDataFromUrl = (compressedData: string): any[] => {
       console.warn('다른 버전의 데이터입니다:', shareData.version);
     }
 
-    return shareData.items;
+    return {
+      items: shareData.items,
+      categories: shareData.categories
+    };
   } catch (error) {
     console.error('데이터 압축 해제 실패:', error);
     throw new Error('데이터를 불러올 수 없습니다. URL을 확인해주세요.');
@@ -64,9 +69,9 @@ export const decompressDataFromUrl = (compressedData: string): any[] => {
 /**
  * 현재 페이지 URL에 데이터를 포함한 공유 URL 생성
  */
-export const generateShareUrl = (data: any[]): string => {
+export const generateShareUrl = (data: any[], categories?: any[]): string => {
   try {
-    const compressedData = compressDataForUrl(data);
+    const compressedData = compressDataForUrl(data, categories);
     const baseUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
 
     return `${baseUrl}?data=${compressedData}`;
@@ -79,9 +84,9 @@ export const generateShareUrl = (data: any[]): string => {
 /**
  * 클립보드에 공유 URL 복사
  */
-export const copyShareUrlToClipboard = async (data: any[]): Promise<void> => {
+export const copyShareUrlToClipboard = async (data: any[], categories?: any[]): Promise<void> => {
   try {
-    const shareUrl = generateShareUrl(data);
+    const shareUrl = generateShareUrl(data, categories);
 
     if (typeof window !== 'undefined' && navigator.clipboard) {
       await navigator.clipboard.writeText(shareUrl);
@@ -103,7 +108,7 @@ export const copyShareUrlToClipboard = async (data: any[]): Promise<void> => {
 /**
  * URL에서 데이터 파라미터를 추출하고 복원
  */
-export const loadDataFromUrl = (): any[] | null => {
+export const loadDataFromUrl = (): { items: any[]; categories?: any[] } | null => {
   try {
     if (typeof window === 'undefined') return null;
 
@@ -137,10 +142,10 @@ export const clearDataFromUrl = (): void => {
 /**
  * 데이터 크기 계산 (압축 전후 비교용)
  */
-export const calculateDataSize = (data: any[]): { original: number; compressed: number } => {
+export const calculateDataSize = (data: any[], categories?: any[]): { original: number; compressed: number } => {
   try {
-    const jsonString = JSON.stringify(data);
-    const compressedData = compressDataForUrl(data);
+    const jsonString = JSON.stringify({ items: data, categories });
+    const compressedData = compressDataForUrl(data, categories);
 
     return {
       original: new Blob([jsonString]).size,

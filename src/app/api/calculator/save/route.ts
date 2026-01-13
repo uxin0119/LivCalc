@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data } = await request.json();
+    const { data, categories } = await request.json();
 
     if (!data) {
       return NextResponse.json(
@@ -21,6 +21,12 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // items와 categories를 함께 저장
+    const saveData = {
+      items: data,
+      categories: categories || []
+    };
 
     // 기존 데이터 확인
     const existingData = await query(
@@ -32,13 +38,13 @@ export async function POST(request: Request) {
       // 업데이트
       await query(
         'UPDATE calculator_data SET data = $1, updated_at = NOW() WHERE user_id = $2',
-        [JSON.stringify(data), session.user.id]
+        [JSON.stringify(saveData), session.user.id]
       );
     } else {
       // 새로 삽입
       await query(
         'INSERT INTO calculator_data (user_id, data) VALUES ($1, $2)',
-        [session.user.id, JSON.stringify(data)]
+        [session.user.id, JSON.stringify(saveData)]
       );
     }
 

@@ -9,12 +9,14 @@ import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 
 interface ItemSectionProps {
-    category: "fixed" | "daily" | "card";
+    category: string;
     title: string;
     placeholder: string;
+    color?: string;
+    icon?: string;
 }
 
-const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder }) => {
+const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder, color = 'blue', icon = '📊' }) => {
     const { items, addItem, updateItemField, monthTotal, fixedTotal } = useCalcStore();
 
     const safeItems: CalcData[] = Array.isArray(items) ? items : [];
@@ -37,7 +39,10 @@ const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder 
         <div className="mt-6">
             {/* 섹션 헤더 */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                <h2 className={TokenStyles.livingCalculator.sectionTitle}>{title}</h2>
+                <h2 className={TokenStyles.livingCalculator.sectionTitle}>
+                    <span className="mr-2">{icon}</span>
+                    {title}
+                </h2>
                 <div className={sectionTotal >= 0 ? TokenStyles.livingCalculator.sectionTotal.positive : TokenStyles.livingCalculator.sectionTotal.negative}>
                     {sectionTotal.toLocaleString()}원
                 </div>

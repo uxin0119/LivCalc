@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { arrayMove } from '@dnd-kit/sortable';
 import CalcData from './CalcData';
+import CategoryData from './CategoryData';
 import util from '../common/script/Util';
 import { ExchangeService } from './exchangeService';
 import { loadDataFromUrl, clearDataFromUrl } from '@/app/common/utils/DataSharing';
@@ -25,25 +26,34 @@ const DAYS_LEFT = getDaysLeftInMonth();
 
 interface CalcState {
   items: CalcData[];
+  categories: CategoryData[];
   isInitialLoad: boolean;
   monthTotal: number;
   dailyAvailable: number;
   fixedTotal: number;
   loadFirstLivingData: () => void;
   loadDataFromSharedUrl: () => boolean;
-  addItem: (category: "fixed" | "daily" | "card", type: "plus" | "minus") => void;
+  addItem: (category: string, type: "plus" | "minus") => void;
   removeItem: (id: string) => void;
   updateItemField: <K extends keyof CalcData>(id: string, field: K, value: CalcData[K]) => void;
   updateItemFields: (id: string, fields: Partial<CalcData>) => void;
   handleDragEnd: (event: any) => void;
   setItems: (items: CalcData[]) => void;
+  setCategories: (categories: CategoryData[]) => void;
   calculateTotals: () => void;
   applyScheduledChanges: () => void;
   checkAndApplyScheduling: () => void;
+  // 카테고리 관리 함수
+  addCategory: (name: string, color: string, icon: string) => void;
+  removeCategory: (categoryId: string) => void;
+  updateCategory: (categoryId: string, updates: Partial<CategoryData>) => void;
+  reorderCategories: (newOrder: CategoryData[]) => void;
+  initializeDefaultCategories: () => void;
 }
 
 const useCalcStore = create<CalcState>((set, get) => ({
   items: [],
+  categories: [],
   isInitialLoad: true,
   monthTotal: 0,
   dailyAvailable: 0,
@@ -55,6 +65,16 @@ const useCalcStore = create<CalcState>((set, get) => ({
     if (!urlDataLoaded) {
       // URL 데이터가 없으면 로컬 스토리지에서 로드
       const jsonString: CalcData[] | null = util.loadLocalStorage("livingData");
+      const savedCategories: CategoryData[] | null = util.loadLocalStorage("livingCategories");
+
+      // 카테고리 마이그레이션
+      if (!savedCategories || savedCategories.length === 0) {
+        // 기존 사용자를 위한 기본 카테고리 생성
+        get().initializeDefaultCategories();
+      } else {
+        set({ categories: savedCategories });
+      }
+
       if (jsonString) {
         const migratedItems = jsonString.map(item => ({
           ...item,
@@ -77,13 +97,21 @@ const useCalcStore = create<CalcState>((set, get) => ({
     try {
       const sharedData = loadDataFromUrl();
 
-      if (sharedData && Array.isArray(sharedData)) {
-        const migratedItems = sharedData.map(item => ({
+      if (sharedData && sharedData.items) {
+        const migratedItems = sharedData.items.map(item => ({
           ...item,
           id: item.id || Date.now() + Math.random().toString(36).substr(2, 9),
           currency: item.currency || "KRW",
           isActive: item.isActive !== undefined ? item.isActive : true
         }));
+
+        // 카테고리 데이터가 있으면 설정, 없으면 기본 카테고리 초기화
+        if (sharedData.categories && Array.isArray(sharedData.categories) && sharedData.categories.length > 0) {
+          set({ categories: sharedData.categories });
+          util.saveLocalStorage("livingCategories", sharedData.categories);
+        } else {
+          get().initializeDefaultCategories();
+        }
 
         // 데이터를 상태에 설정
         set({ items: migratedItems, isInitialLoad: false });
@@ -188,6 +216,9 @@ const useCalcStore = create<CalcState>((set, get) => ({
         get().calculateTotals();
       }, 0);
   },
+  setCategories: (categories) => {
+      set({ categories });
+  },
   calculateTotals: async () => {
     const items = get().items;
     let newMonthTotal = 0;
@@ -250,6 +281,76 @@ const useCalcStore = create<CalcState>((set, get) => ({
 
       get().applyScheduledChanges();
     }
+  },
+
+  // 카테고리 관리 함수들
+  addCategory: (name: string, color: string, icon: string) => {
+    const newCategory: CategoryData = {
+      id: Date.now() + Math.random().toString(36).substr(2, 9),
+      name,
+      color,
+      icon,
+      order: get().categories.length,
+      createdAt: new Date().toISOString()
+    };
+    set(state => ({ categories: [...state.categories, newCategory] }));
+  },
+
+  removeCategory: (categoryId: string) => {
+    // 해당 카테고리의 아이템도 삭제
+    set(state => ({
+      categories: state.categories.filter(c => c.id !== categoryId),
+      items: state.items.filter(item => item.category !== categoryId)
+    }));
+    setTimeout(() => {
+      get().calculateTotals();
+    }, 0);
+  },
+
+  updateCategory: (categoryId: string, updates: Partial<CategoryData>) => {
+    set(state => ({
+      categories: state.categories.map(c =>
+        c.id === categoryId ? { ...c, ...updates } : c
+      )
+    }));
+  },
+
+  reorderCategories: (newOrder: CategoryData[]) => {
+    const reordered = newOrder.map((cat, index) => ({
+      ...cat,
+      order: index
+    }));
+    set({ categories: reordered });
+  },
+
+  initializeDefaultCategories: () => {
+    const defaultCategories: CategoryData[] = [
+      {
+        id: 'fixed',
+        name: '고정 수입/지출',
+        color: 'blue',
+        icon: '💰',
+        order: 0,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'card',
+        name: '카드 고정지출',
+        color: 'purple',
+        icon: '💳',
+        order: 1,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'daily',
+        name: '유동적 수입/지출',
+        color: 'green',
+        icon: '📊',
+        order: 2,
+        createdAt: new Date().toISOString()
+      }
+    ];
+    set({ categories: defaultCategories });
   }
 }));
 
@@ -257,6 +358,9 @@ useCalcStore.subscribe(
   (state, prevState) => {
     if (!state.isInitialLoad && state.items !== prevState.items) {
       util.saveLocalStorage("livingData", state.items);
+    }
+    if (!state.isInitialLoad && state.categories !== prevState.categories) {
+      util.saveLocalStorage("livingCategories", state.categories);
     }
   },
 );

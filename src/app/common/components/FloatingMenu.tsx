@@ -6,9 +6,10 @@ interface FloatingMenuProps {
   onExport: () => void;
   onSave?: () => void;
   onLoad?: () => void;
+  onManageCategories?: () => void;
 }
 
-const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport, onSave, onLoad }) => {
+const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport, onSave, onLoad, onManageCategories }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -98,6 +99,32 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport, onSave, onLoad })
               />
             </svg>
           </button>
+          {/* 섹션 관리 버튼 */}
+          {onManageCategories && (
+            <button
+              onClick={() => {
+                onManageCategories();
+                setIsOpen(false);
+              }}
+              className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg transition-all duration-200 transform hover:scale-110"
+              title="섹션 관리"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-4 h-4 sm:w-5 sm:h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 
