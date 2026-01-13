@@ -8,7 +8,7 @@ const TotalArea: React.FC = () => {
     return (
         <div className="mt-10 space-y-6">
             {/* 월 가용 금액 */}
-            <div className="bg-gray-900 text-white p-8 rounded-3xl shadow-2xl border border-gray-800">
+            <div className="bg-gray-800/50 text-white p-8 rounded-2xl shadow-xl border border-gray-700/50 backdrop-blur-sm">
                 <div className="flex justify-between items-center">
                     <div>
                         <h3 className="text-xl font-light opacity-90 tracking-wide">월 가용 금액</h3>
@@ -22,7 +22,7 @@ const TotalArea: React.FC = () => {
             </div>
 
             {/* 일일 가용 금액 */}
-            <div className="bg-gray-900 text-white p-6 rounded-2xl shadow-lg border border-gray-800">
+            <div className="bg-gray-800/50 text-white p-6 rounded-xl shadow-lg border border-gray-700/50 backdrop-blur-sm">
                 <div className="text-center">
                     <h4 className="text-lg font-light opacity-90 mb-3 tracking-wide">일일 가용 금액</h4>
                     <div className="text-3xl font-light">{dailyAvailable.toLocaleString()}원</div>

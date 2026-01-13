@@ -4,9 +4,11 @@ import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 
 interface FloatingMenuProps {
   onExport: () => void;
+  onSave?: () => void;
+  onLoad?: () => void;
 }
 
-const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport }) => {
+const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport, onSave, onLoad }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -18,14 +20,68 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport }) => {
       {/* 메뉴 아이템들 */}
       {isOpen && (
         <div className="absolute bottom-12 sm:bottom-16 right-0 flex flex-col gap-2 sm:gap-3 mb-1">
+          {/* 불러오기 버튼 */}
+          {onLoad && (
+            <button
+              onClick={() => {
+                onLoad();
+                setIsOpen(false);
+              }}
+              className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 transform hover:scale-110"
+              title="DB에서 불러오기"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-4 h-4 sm:w-5 sm:h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                />
+              </svg>
+            </button>
+          )}
+
+          {/* 저장 버튼 */}
+          {onSave && (
+            <button
+              onClick={() => {
+                onSave();
+                setIsOpen(false);
+              }}
+              className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-all duration-200 transform hover:scale-110"
+              title="DB에 저장"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-4 h-4 sm:w-5 sm:h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                />
+              </svg>
+            </button>
+          )}
+
           {/* 내보내기 버튼 */}
           <button
             onClick={() => {
               onExport();
               setIsOpen(false);
             }}
-            className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 bg-gray-800 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-full shadow-lg transition-all duration-200 transform hover:scale-110"
-            title="데이터 내보내기"
+            className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 bg-gray-700 hover:bg-gray-600 text-white rounded-full shadow-lg transition-all duration-200 transform hover:scale-110"
+            title="데이터 공유"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -42,18 +98,6 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport }) => {
               />
             </svg>
           </button>
-
-          {/* 향후 확장을 위한 추가 버튼들 */}
-          {/*
-          <button
-            className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gray-800 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-full shadow-lg transition-all duration-200 transform hover:scale-110"
-            title="기타 기능"
-          >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="..." />
-            </svg>
-          </button>
-          */}
         </div>
       )}
 

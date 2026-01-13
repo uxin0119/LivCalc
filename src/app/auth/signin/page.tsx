@@ -42,58 +42,22 @@ export default function SignInPage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f5f5f5',
-      padding: '20px',
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        backgroundColor: 'white',
-        padding: '40px',
-        borderRadius: '12px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      }}>
-        <h1 style={{
-          fontSize: '28px',
-          fontWeight: 'bold',
-          marginBottom: '8px',
-          textAlign: 'center',
-        }}>로그인</h1>
-        <p style={{
-          color: '#666',
-          textAlign: 'center',
-          marginBottom: '32px',
-        }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 p-5">
+      <div className="w-full max-w-md bg-gray-900 p-10 rounded-xl shadow-2xl border border-gray-800">
+        <h1 className="text-3xl font-bold mb-2 text-center text-white">로그인</h1>
+        <p className="text-gray-400 text-center mb-8">
           계정에 로그인하세요
         </p>
 
         {error && (
-          <div style={{
-            padding: '12px',
-            marginBottom: '20px',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '8px',
-            color: '#c00',
-            fontSize: '14px',
-          }}>
+          <div className="p-3 mb-5 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}>
+          <div className="mb-5">
+            <label className="block mb-2 text-sm font-medium text-gray-300">
               이메일
             </label>
             <input
@@ -101,24 +65,13 @@ export default function SignInPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                fontSize: '14px',
-              }}
+              className="w-full p-3 border border-gray-700 rounded-lg text-sm bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="your@email.com"
             />
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}>
+          <div className="mb-6">
+            <label className="block mb-2 text-sm font-medium text-gray-300">
               비밀번호
             </label>
             <input
@@ -126,13 +79,7 @@ export default function SignInPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                fontSize: '14px',
-              }}
+              className="w-full p-3 border border-gray-700 rounded-lg text-sm bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••••"
             />
           </div>
@@ -140,67 +87,34 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: loading ? '#ccc' : '#0070f3',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '500',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginBottom: '16px',
-            }}
+            className={`w-full p-3 rounded-lg text-base font-medium mb-4 transition-colors ${
+              loading
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
           >
             {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          margin: '24px 0',
-        }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
-          <span style={{ padding: '0 16px', color: '#666', fontSize: '14px' }}>또는</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
+        <div className="flex items-center my-6">
+          <div className="flex-1 h-px bg-gray-700" />
+          <span className="px-4 text-gray-500 text-sm">또는</span>
+          <div className="flex-1 h-px bg-gray-700" />
         </div>
 
         <button
           onClick={() => handleSocialLogin('google')}
-          style={{
-            width: '100%',
-            padding: '12px',
-            backgroundColor: 'white',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            marginBottom: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}
+          className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors mb-6 flex items-center justify-center gap-2 text-white"
         >
           <span>Google로 계속하기</span>
         </button>
 
-        <p style={{
-          textAlign: 'center',
-          fontSize: '14px',
-          color: '#666',
-        }}>
+        <p className="text-center text-sm text-gray-400">
           계정이 없으신가요?{' '}
           <Link
             href="/auth/signup"
-            style={{
-              color: '#0070f3',
-              textDecoration: 'none',
-              fontWeight: '500',
-            }}
+            className="text-blue-500 hover:text-blue-400 font-medium"
           >
             회원가입
           </Link>

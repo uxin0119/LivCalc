@@ -10,11 +10,18 @@ import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 import FloatingMenu from '@/app/common/components/FloatingMenu';
 import { copyShareUrlToClipboard } from '@/app/common/utils/DataSharing';
+import { useSession } from 'next-auth/react';
 
 export default function LivingCalculatorPage() {
-    const { items, loadFirstLivingData, handleDragEnd, checkAndApplyScheduling } = useCalcStore();
+    const { items, loadFirstLivingData, handleDragEnd, checkAndApplyScheduling, setItems } = useCalcStore();
+    const { data: session, status } = useSession();
     const [isItemDetailOpen, setIsItemDetailOpen] = useState(false);
     const [showExportSuccess, setShowExportSuccess] = useState(false);
+    const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+    const [showLoadSuccess, setShowLoadSuccess] = useState(false);
+    const [showError, setShowError] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         loadFirstLivingData();
@@ -60,12 +67,83 @@ export default function LivingCalculatorPage() {
         }
     };
 
+    const handleSave = async () => {
+        if (status !== 'authenticated') {
+            setShowError('로그인이 필요합니다.');
+            setTimeout(() => setShowError(''), 3000);
+            return;
+        }
+
+        if (isSaving) return;
+
+        setIsSaving(true);
+        try {
+            const response = await fetch('/api/calculator/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ data: items }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || '저장 실패');
+            }
+
+            setShowSaveSuccess(true);
+            setTimeout(() => setShowSaveSuccess(false), 3000);
+        } catch (error) {
+            console.error('저장 실패:', error);
+            setShowError(error instanceof Error ? error.message : '저장에 실패했습니다.');
+            setTimeout(() => setShowError(''), 3000);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleLoad = async () => {
+        if (status !== 'authenticated') {
+            setShowError('로그인이 필요합니다.');
+            setTimeout(() => setShowError(''), 3000);
+            return;
+        }
+
+        if (isLoading) return;
+
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/calculator/load');
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || '불러오기 실패');
+            }
+
+            if (result.data) {
+                setItems(result.data);
+                setShowLoadSuccess(true);
+                setTimeout(() => setShowLoadSuccess(false), 3000);
+            } else {
+                setShowError('저장된 데이터가 없습니다.');
+                setTimeout(() => setShowError(''), 3000);
+            }
+        } catch (error) {
+            console.error('불러오기 실패:', error);
+            setShowError(error instanceof Error ? error.message : '불러오기에 실패했습니다.');
+            setTimeout(() => setShowError(''), 3000);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <DndContext
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
         >
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+            <div className="min-h-screen bg-gray-900">
                 <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-2xl">
                     {/* 메인 헤더 */}
                     <div className="text-center mb-6 sm:mb-8">
@@ -96,9 +174,13 @@ export default function LivingCalculatorPage() {
             </div>
 
             {/* 플로팅 메뉴 */}
-            <FloatingMenu onExport={handleExport} />
+            <FloatingMenu
+                onExport={handleExport}
+                onSave={status === 'authenticated' ? handleSave : undefined}
+                onLoad={status === 'authenticated' ? handleLoad : undefined}
+            />
 
-            {/* 내보내기 성공 토스트 */}
+            {/* 토스트 메시지들 */}
             {showExportSuccess && (
                 <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
                     <div className="flex items-center gap-2">
@@ -106,6 +188,39 @@ export default function LivingCalculatorPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         공유 링크가 클립보드에 복사되었습니다!
+                    </div>
+                </div>
+            )}
+
+            {showSaveSuccess && (
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
+                    <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        DB에 저장되었습니다!
+                    </div>
+                </div>
+            )}
+
+            {showLoadSuccess && (
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
+                    <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        DB에서 불러왔습니다!
+                    </div>
+                </div>
+            )}
+
+            {showError && (
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
+                    <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        {showError}
                     </div>
                 </div>
             )}

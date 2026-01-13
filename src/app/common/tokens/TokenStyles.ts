@@ -6,69 +6,69 @@ export const TokenStyles = {
   // 생활비 계산기 관련 스타일
   livingCalculator: {
     // 메인 컨테이너
-    container: 'bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700',
+    container: 'bg-gray-800/50 rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-700/50 backdrop-blur-sm',
 
     // 헤더
-    title: 'text-3xl sm:text-4xl font-light text-gray-900 dark:text-gray-100 tracking-wide',
-    subtitle: 'text-sm sm:text-base text-gray-600 dark:text-gray-300 font-light',
-    sectionTitle: 'text-xl sm:text-2xl font-light text-gray-900 dark:text-gray-100 tracking-wide',
+    title: 'text-3xl sm:text-4xl font-light text-gray-100 tracking-wide',
+    subtitle: 'text-sm sm:text-base text-gray-300 font-light',
+    sectionTitle: 'text-xl sm:text-2xl font-light text-gray-100 tracking-wide',
 
     // 카드 스타일
     card: {
       // 활성화된 아이템
-      active: 'bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 mb-3 overflow-hidden',
-      activeHover: 'hover:bg-white dark:hover:bg-gray-700 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-500',
-      activeDragging: 'z-50 shadow-2xl border-gray-400 dark:border-gray-500 opacity-95 scale-105 bg-white dark:bg-gray-700',
+      active: 'bg-gray-800/50 rounded-xl border border-gray-700/50 mb-3 overflow-hidden backdrop-blur-sm',
+      activeHover: 'hover:bg-gray-800/70 hover:shadow-lg hover:border-gray-600',
+      activeDragging: 'z-50 shadow-2xl border-gray-600 opacity-95 scale-105 bg-gray-800/70',
 
       // 비활성화된 아이템
-      inactive: 'bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 mb-2 overflow-hidden opacity-60',
-      inactiveHover: 'hover:bg-gray-200 dark:hover:bg-gray-700 hover:opacity-80',
-      inactiveDragging: 'z-50 shadow-lg border-gray-400 dark:border-gray-500 opacity-80 scale-105',
+      inactive: 'bg-gray-800/30 rounded-lg border border-gray-700/30 mb-2 overflow-hidden opacity-60',
+      inactiveHover: 'hover:bg-gray-800/50 hover:opacity-80',
+      inactiveDragging: 'z-50 shadow-lg border-gray-600 opacity-80 scale-105',
     },
 
     // 드래그 핸들
     dragHandle: {
-      base: 'cursor-grab active:cursor-grabbing w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-600 select-none transition-colors',
-      border: 'border-r border-gray-200 dark:border-gray-600',
-      hover: 'hover:bg-gray-100 dark:hover:bg-gray-600',
+      base: 'cursor-grab active:cursor-grabbing w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300 select-none transition-colors',
+      border: 'border-r border-gray-600',
+      hover: 'hover:bg-gray-700',
     },
 
     // 설정 버튼
     settingsButton: {
-      base: 'w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors cursor-pointer',
-      border: 'border-l border-gray-200 dark:border-gray-600',
-      hover: 'hover:bg-gray-100 dark:hover:bg-gray-600',
+      base: 'w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-colors cursor-pointer',
+      border: 'border-l border-gray-600',
+      hover: 'hover:bg-gray-700',
     },
 
     // 입력 필드
     input: {
-      text: 'w-full text-base font-medium border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-0 bg-white dark:bg-gray-700 dark:text-white',
-      currency: 'w-full text-right text-base sm:text-lg font-semibold border-gray-200 dark:border-gray-600 focus:border-gray-400 dark:focus:border-gray-500 focus:ring-0 bg-white dark:bg-gray-700 dark:text-white',
+      text: 'w-full text-base font-medium border-0 focus:ring-0 bg-gray-700/50 text-white placeholder-gray-400 px-3 py-2 rounded-lg',
+      currency: 'w-full text-right text-base sm:text-lg font-semibold border-0 focus:ring-0 bg-gray-700/50 text-white px-3 py-2 rounded-lg',
     },
 
     // 타입 표시 아이콘
     typeIcon: {
-      plus: 'w-6 h-6 flex items-center justify-center font-semibold rounded-md bg-gray-100 text-gray-700',
-      minus: 'w-6 h-6 flex items-center justify-center font-semibold rounded-md bg-gray-900 text-white',
+      plus: 'w-6 h-6 flex items-center justify-center font-semibold rounded-md bg-gray-600 text-white',
+      minus: 'w-6 h-6 flex items-center justify-center font-semibold rounded-md bg-gray-700 text-white border border-gray-500',
     },
 
     // 섹션 금액 표시
     sectionTotal: {
-      positive: 'px-4 sm:px-6 py-2 sm:py-3 rounded-2xl font-semibold text-base sm:text-lg border-2 transition-all duration-200 text-center bg-white text-gray-900 border-gray-900',
-      negative: 'px-4 sm:px-6 py-2 sm:py-3 rounded-2xl font-semibold text-base sm:text-lg border-2 transition-all duration-200 text-center bg-gray-900 text-white border-gray-900',
+      positive: 'px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium text-base sm:text-lg transition-all duration-200 text-center bg-gray-700/50 text-white backdrop-blur-sm',
+      negative: 'px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium text-base sm:text-lg transition-all duration-200 text-center bg-gray-800/50 text-white border border-gray-600 backdrop-blur-sm',
     },
 
     // 추가 버튼 영역
     addButtonArea: {
-      container: 'mt-6 p-4 sm:p-6 bg-transparent rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300',
-      label: 'text-sm text-gray-600 dark:text-gray-300 mb-4 font-light tracking-wide',
+      container: 'mt-6 p-4 sm:p-6 bg-gray-800/30 rounded-xl border border-gray-700/50 hover:border-gray-600 hover:bg-gray-800/50 transition-all duration-300',
+      label: 'text-sm text-gray-400 mb-4 font-light tracking-wide',
       buttonContainer: 'flex flex-col sm:flex-row gap-3 sm:gap-4',
     },
 
     // 버튼 스타일
     button: {
-      income: 'flex-1 bg-gray-50 hover:bg-gray-900 text-gray-900 hover:text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl border-2 border-gray-900 transition-all duration-200 shadow-lg hover:shadow-xl',
-      expense: 'flex-1 bg-gray-900 hover:bg-gray-700 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl border-2 border-gray-900 transition-all duration-200 shadow-lg hover:shadow-xl',
+      income: 'flex-1 bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200',
+      expense: 'flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg border border-gray-600 transition-all duration-200',
     },
   },
 
