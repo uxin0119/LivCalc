@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: theme('colors.white');
-  --foreground: theme('colors.gray.900');
+  --background: theme('colors.gray.950');
+  --foreground: theme('colors.gray.100');
 }
 
 @theme inline {
@@ -12,13 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-        --background: theme('colors.black');
-    --foreground: theme('colors.gray.200');
-  }
-}
-
+/* 다크 모드 강제 적용 */
 body {
   background: var(--background);
   color: var(--foreground);

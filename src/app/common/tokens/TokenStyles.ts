@@ -42,8 +42,8 @@ export const TokenStyles = {
 
     // 입력 필드
     input: {
-      text: 'w-full text-base font-medium border-0 focus:ring-0 bg-gray-700/50 text-white placeholder-gray-400 px-3 py-2 rounded-lg',
-      currency: 'w-full text-right text-base sm:text-lg font-semibold border-0 focus:ring-0 bg-gray-700/50 text-white px-3 py-2 rounded-lg',
+      text: 'w-full text-base font-medium border-0 focus:ring-0 bg-gray-900/80 text-white placeholder-gray-500 px-3 py-2 rounded-lg',
+      currency: 'w-full text-right text-base sm:text-lg font-semibold border-0 focus:ring-0 bg-gray-900/80 text-white px-3 py-2 rounded-lg',
     },
 
     // 타입 표시 아이콘

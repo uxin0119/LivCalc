@@ -41,8 +41,7 @@ const CInput: React.FC<InputProps> = ({
                                       }) => {
     const baseClasses = '' +
         'border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
-        'focus:border-transparent transition duration-200' +
-        DefaultStyle.backgroundColor1;
+        'focus:border-transparent transition duration-200';
 
     const sizeClasses = {
         sm: 'px-2 py-1 text-sm',
@@ -51,8 +50,8 @@ const CInput: React.FC<InputProps> = ({
     };
 
     const disabledClasses = disabled || readOnly
-        ? DefaultStyle.backgroundColor2
-        : DefaultStyle.backgroundColor1;
+        ? 'opacity-50 cursor-not-allowed'
+        : '';
 
     const combinedClasses = `
         ${baseClasses}
