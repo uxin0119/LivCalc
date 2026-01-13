@@ -1,25 +1,34 @@
 import { Pool } from 'pg';
 
-// 환경 변수 확인
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
+// 연결 풀을 lazy하게 초기화
+let pool: Pool | null = null;
 
-// CockroachDB 연결 풀 생성 (서버리스 환경 최적화)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false, // CockroachDB Serverless의 경우 필요
-  },
-  max: 20, // 최대 연결 수 (서버리스 환경에서 제한)
-  idleTimeoutMillis: 30000, // 30초 후 유휴 연결 해제
-  connectionTimeoutMillis: 10000, // 10초 연결 타임아웃
-});
+function getPool(): Pool {
+  if (!pool) {
+    // 환경 변수 확인
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+
+    // CockroachDB 연결 풀 생성 (서버리스 환경 최적화)
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false, // CockroachDB Serverless의 경우 필요
+      },
+      max: 20, // 최대 연결 수 (서버리스 환경에서 제한)
+      idleTimeoutMillis: 30000, // 30초 후 유휴 연결 해제
+      connectionTimeoutMillis: 10000, // 10초 연결 타임아웃
+    });
+  }
+  return pool;
+}
 
 // 연결 테스트 함수
 export async function testConnection() {
   try {
-    const client = await pool.connect();
+    const currentPool = getPool();
+    const client = await currentPool.connect();
     const result = await client.query('SELECT NOW()');
     client.release();
     console.log('Database connected successfully:', result.rows[0]);
@@ -32,7 +41,8 @@ export async function testConnection() {
 
 // 쿼리 실행 함수
 export async function query<T = any>(text: string, params?: any[]): Promise<T[]> {
-  const client = await pool.connect();
+  const currentPool = getPool();
+  const client = await currentPool.connect();
   try {
     const result = await client.query(text, params);
     return result.rows;
@@ -50,4 +60,4 @@ export async function queryOne<T = any>(text: string, params?: any[]): Promise<T
   return rows.length > 0 ? rows[0] : null;
 }
 
-export default pool;
+export default getPool;
