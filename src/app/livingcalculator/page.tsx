@@ -2,10 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import ItemSection from "./ItemSection";
 import TotalArea from "./TotalArea";
-import { DndContext, closestCenter } from '@dnd-kit/core';
-import DefaultStyle from "@/app/common/script/DefaultStyle";
 import Modal from "@/app/common/components/Modal";
-import CSection1 from "@/app/common/ui/CSection1";
 import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 import FloatingMenu from '@/app/common/components/FloatingMenu';
@@ -14,7 +11,7 @@ import { copyShareUrlToClipboard } from '@/app/common/utils/DataSharing';
 import { useSession } from 'next-auth/react';
 
 export default function LivingCalculatorPage() {
-    const { items, categories, loadFirstLivingData, handleDragEnd, checkAndApplyScheduling, setItems, setCategories } = useCalcStore();
+    const { items, categories, loadFirstLivingData, checkAndApplyScheduling, setItems, setCategories } = useCalcStore();
     const { data: session, status } = useSession();
     const [isItemDetailOpen, setIsItemDetailOpen] = useState(false);
     const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
@@ -149,10 +146,7 @@ export default function LivingCalculatorPage() {
     };
 
     return (
-        <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-        >
+        <>
             <div className="min-h-screen bg-gray-900">
                 <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-2xl">
                     {/* 메인 헤더 */}
@@ -244,6 +238,6 @@ export default function LivingCalculatorPage() {
             >
                 수정
             </Modal>
-        </DndContext>
+        </>
     );
 }

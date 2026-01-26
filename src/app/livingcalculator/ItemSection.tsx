@@ -2,9 +2,7 @@ import React, { useMemo } from "react";
 import CButton from "@/app/common/ui/CButton";
 import CalcItem from "@/app/livingcalculator/CalcItem";
 import CalcData from "@/app/livingcalculator/CalcData";
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import DefaultStyle from "@/app/common/script/DefaultStyle";
-import CSection2 from "@/app/common/ui/CSection2";
+import SortableList from "@/app/common/components/SortableList";
 import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 
@@ -17,7 +15,7 @@ interface ItemSectionProps {
 }
 
 const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder, color = 'blue', icon = '📊' }) => {
-    const { items, addItem, updateItemField, monthTotal, fixedTotal } = useCalcStore();
+    const { items, addItem, reorderItemsInCategory } = useCalcStore();
 
     const safeItems: CalcData[] = Array.isArray(items) ? items : [];
     const categoryItems: CalcData[] = safeItems.filter(item => item && item.category === category);
@@ -26,6 +24,8 @@ const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder,
         let total = 0;
         safeItems.forEach(item => {
             if (item && typeof item === 'object' && item.category === category && item.type !== undefined && item.value !== undefined) {
+                // 비활성화된 아이템은 섹션 합계에서도 제외
+                if (item.isActive === false) return;
                 const amount = item.type === "plus" ? item.value : -item.value;
                 total += amount;
             }
@@ -33,7 +33,9 @@ const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder,
         return total;
     }, [safeItems, category]);
 
-    const categoryItemIds = categoryItems.map(item => item.id);
+    const handleDragEnd = (activeId: string, overId: string) => {
+        reorderItemsInCategory(category, activeId, overId);
+    };
 
     return (
         <div className="mt-6">
@@ -47,21 +49,24 @@ const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder,
                     {sectionTotal.toLocaleString()}원
                 </div>
             </div>
-            
+
             {/* 아이템 목록 */}
-            <SortableContext items={categoryItemIds} strategy={verticalListSortingStrategy}>
-                <div className="space-y-0">
-                    {categoryItems.map((item) => (
-                        <CalcItem
-                            key={item.id}
-                            id={item.id}
-                            item={item}
-                            placeholder={placeholder}
-                        />
-                    ))}
-                </div>
-            </SortableContext>
-            
+            <SortableList
+                items={categoryItems}
+                onDragEnd={handleDragEnd}
+                strategy="vertical"
+                className="space-y-0"
+            >
+                {categoryItems.map((item) => (
+                    <CalcItem
+                        key={item.id}
+                        id={item.id}
+                        item={item}
+                        placeholder={placeholder}
+                    />
+                ))}
+            </SortableList>
+
             {/* 항목 추가 버튼 */}
             <div className={TokenStyles.livingCalculator.addButtonArea.container}>
                 <div className={TokenStyles.livingCalculator.addButtonArea.label}>항목 추가</div>

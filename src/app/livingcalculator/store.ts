@@ -38,6 +38,7 @@ interface CalcState {
   updateItemField: <K extends keyof CalcData>(id: string, field: K, value: CalcData[K]) => void;
   updateItemFields: (id: string, fields: Partial<CalcData>) => void;
   handleDragEnd: (event: any) => void;
+  reorderItemsInCategory: (category: string, activeId: string, overId: string) => void;
   setItems: (items: CalcData[]) => void;
   setCategories: (categories: CategoryData[]) => void;
   calculateTotals: () => void;
@@ -192,7 +193,7 @@ const useCalcStore = create<CalcState>((set, get) => ({
       const items = get().items;
       const activeId = active.id.toString();
       const overId = over.id.toString();
-      
+
       const activeIndex = items.findIndex(item => item.id === activeId);
       const overIndex = items.findIndex(item => item.id === overId);
 
@@ -207,6 +208,25 @@ const useCalcStore = create<CalcState>((set, get) => ({
             get().calculateTotals();
           }, 0);
         }
+      }
+    }
+  },
+  reorderItemsInCategory: (category: string, activeId: string, overId: string) => {
+    const items = get().items;
+    const activeIndex = items.findIndex(item => item.id === activeId);
+    const overIndex = items.findIndex(item => item.id === overId);
+
+    if (activeIndex !== -1 && overIndex !== -1) {
+      const activeItem = items[activeIndex];
+      const overItem = items[overIndex];
+
+      // 같은 카테고리 내에서만 이동
+      if (activeItem && overItem && activeItem.category === category && overItem.category === category) {
+        const newItems = arrayMove(items, activeIndex, overIndex);
+        set({ items: newItems });
+        setTimeout(() => {
+          get().calculateTotals();
+        }, 0);
       }
     }
   },
