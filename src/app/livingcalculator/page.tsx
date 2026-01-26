@@ -7,19 +7,15 @@ import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 import FloatingMenu from '@/app/common/components/FloatingMenu';
 import CategoryManagementModal from './CategoryManagementModal';
-import StatisticsModal from './StatisticsModal';
-import { copyShareUrlToClipboard } from '@/app/common/utils/DataSharing';
 import { useSession } from 'next-auth/react';
 
 type SyncStatus = 'synced' | 'saving' | 'error' | 'loading';
 
 export default function LivingCalculatorPage() {
-    const { items, categories, loadFirstLivingData, checkAndApplyScheduling, setItems, setCategories, isInitialLoad } = useCalcStore();
+    const { items, categories, loadFirstLivingData, checkAndApplyScheduling, setItems, setCategories, isInitialLoad, dailyAvailable, monthTotal } = useCalcStore();
     const { data: session, status } = useSession();
     const [isItemDetailOpen, setIsItemDetailOpen] = useState(false);
     const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
-    const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
-    const [showExportSuccess, setShowExportSuccess] = useState(false);
     
     // 동기화 상태 관리
     const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
@@ -90,7 +86,14 @@ export default function LivingCalculatorPage() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ data: items, categories: categories }),
+                    body: JSON.stringify({ 
+                        data: items, 
+                        categories: categories,
+                        summary: {
+                            dailyAvailable,
+                            monthTotal
+                        }
+                    }),
                 });
 
                 if (!response.ok) throw new Error('Auto-save failed');
@@ -108,7 +111,7 @@ export default function LivingCalculatorPage() {
                 clearTimeout(autoSaveTimerRef.current);
             }
         };
-    }, [items, categories, status, isInitialLoad]);
+    }, [items, categories, status, isInitialLoad, dailyAvailable, monthTotal]);
 
     // 3. 스케줄링 체크
     useEffect(() => {
@@ -133,17 +136,6 @@ export default function LivingCalculatorPage() {
 
         return () => clearTimeout(timeoutId);
     }, [items.length, checkAndApplyScheduling]);
-
-    const handleExport = async () => {
-        try {
-            await copyShareUrlToClipboard(items, categories);
-            setShowExportSuccess(true);
-            setTimeout(() => setShowExportSuccess(false), 3000);
-        } catch (error) {
-            console.error('내보내기 실패:', error);
-            alert('내보내기에 실패했습니다. 다시 시도해주세요.');
-        }
-    };
 
     // 상태 아이콘 렌더링
     const renderSyncStatus = () => {
@@ -216,36 +208,15 @@ export default function LivingCalculatorPage() {
                 </div>
             </div>
 
-            {/* 플로팅 메뉴 (저장/로드 제거됨) */}
+            {/* 플로팅 메뉴 */}
             <FloatingMenu
-                onExport={handleExport}
-                // onSave와 onLoad는 자동화되었으므로 제거
                 onManageCategories={() => setIsCategoryManagementOpen(true)}
-                onShowStatistics={() => setIsStatisticsOpen(true)}
             />
-
-            {/* 토스트 메시지들 */}
-            {showExportSuccess && (
-                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
-                    <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        공유 링크가 클립보드에 복사되었습니다!
-                    </div>
-                </div>
-            )}
 
             {/* 섹션 관리 모달 */}
             <CategoryManagementModal
                 isOpen={isCategoryManagementOpen}
                 onClose={() => setIsCategoryManagementOpen(false)}
-            />
-
-            {/* 통계 모달 */}
-            <StatisticsModal
-                isOpen={isStatisticsOpen}
-                onClose={() => setIsStatisticsOpen(false)}
             />
 
             <Modal

@@ -17,6 +17,7 @@ export default function Sidebar() {
 
     const pages: pagesProps[] = [
         { url: "/livingcalculator", name: "생활비 계산기", selected: false },
+        { url: "/history", name: "자산 기록 달력", selected: false },
     ]
 
     const [statePages, setStatePages] = useState<pagesProps[]>(pages);

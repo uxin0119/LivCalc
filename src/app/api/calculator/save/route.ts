@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, categories } = await request.json();
+    const { data, categories, summary } = await request.json();
 
     if (!data) {
       return NextResponse.json(
@@ -24,13 +24,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // items와 categories를 함께 저장
+    // items와 categories를 함께 저장 (Main Data)
     const saveData = {
       items: data,
       categories: categories || []
     };
 
-    // 기존 데이터 확인
+    // 1. 메인 데이터 저장 (Update or Insert)
     const existingData = await query(
       'SELECT id FROM calculator_data WHERE user_id = $1',
       [session.user.id]
@@ -47,6 +47,28 @@ export async function POST(request: Request) {
       await query(
         'INSERT INTO calculator_data (user_id, data) VALUES ($1, $2)',
         [session.user.id, JSON.stringify(saveData)]
+      );
+    }
+
+    // 2. 로그 저장 (History Log - 오늘 날짜 기록 업데이트 또는 생성)
+    if (summary) {
+      const { dailyAvailable, monthTotal } = summary;
+      
+      await query(
+        `INSERT INTO calculator_logs (user_id, log_date, daily_available, total_expense) 
+         VALUES ($1, CURRENT_DATE, $2, $3)
+         ON CONFLICT (user_id, log_date) 
+         DO UPDATE SET 
+            daily_available = EXCLUDED.daily_available,
+            total_expense = EXCLUDED.total_expense,
+            created_at = NOW()`,
+        [session.user.id, dailyAvailable || 0, monthTotal || 0]
+      );
+
+      // 3. 오래된 로그 삭제 (2달 지난 데이터)
+      // 매번 실행하면 부담이 될 수 있지만, 개인용 앱 규모에서는 문제 없음.
+      await query(
+        "DELETE FROM calculator_logs WHERE created_at < NOW() - INTERVAL '2 months'"
       );
     }
 
