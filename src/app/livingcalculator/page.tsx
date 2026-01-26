@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import ItemSection from "./ItemSection";
 import TotalArea from "./TotalArea";
 import Modal from "@/app/common/components/Modal";
@@ -7,38 +7,115 @@ import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 import FloatingMenu from '@/app/common/components/FloatingMenu';
 import CategoryManagementModal from './CategoryManagementModal';
+import StatisticsModal from './StatisticsModal';
 import { copyShareUrlToClipboard } from '@/app/common/utils/DataSharing';
 import { useSession } from 'next-auth/react';
 
+type SyncStatus = 'synced' | 'saving' | 'error' | 'loading';
+
 export default function LivingCalculatorPage() {
-    const { items, categories, loadFirstLivingData, checkAndApplyScheduling, setItems, setCategories } = useCalcStore();
+    const { items, categories, loadFirstLivingData, checkAndApplyScheduling, setItems, setCategories, isInitialLoad } = useCalcStore();
     const { data: session, status } = useSession();
     const [isItemDetailOpen, setIsItemDetailOpen] = useState(false);
     const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
+    const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
     const [showExportSuccess, setShowExportSuccess] = useState(false);
-    const [showSaveSuccess, setShowSaveSuccess] = useState(false);
-    const [showLoadSuccess, setShowLoadSuccess] = useState(false);
-    const [showError, setShowError] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    
+    // 동기화 상태 관리
+    const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
+    const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+    const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // 정렬된 카테고리
     const sortedCategories = useMemo(() => {
         return [...categories].sort((a, b) => a.order - b.order);
     }, [categories]);
 
+    // 1. 초기 데이터 로드 (로컬 + 서버)
     useEffect(() => {
-        loadFirstLivingData();
-    }, [loadFirstLivingData]);
+        const initData = async () => {
+            // 먼저 로컬/URL 데이터 로드
+            loadFirstLivingData();
 
-    // 컴포넌트 마운트 시와 정기적으로 스케줄링 체크
+            // 로그인 상태라면 서버 데이터 조용히 로드 (Auto-Load)
+            if (status === 'authenticated') {
+                try {
+                    setSyncStatus('loading');
+                    const response = await fetch('/api/calculator/load');
+                    const result = await response.json();
+
+                    if (response.ok && result.data) {
+                        // 서버 데이터가 있으면 덮어쓰기
+                        setItems(result.data);
+                        if (result.categories && Array.isArray(result.categories) && result.categories.length > 0) {
+                            setCategories(result.categories);
+                        }
+                        setSyncStatus('synced');
+                        setLastSavedTime(new Date());
+                    } else {
+                        // 데이터가 없으면 '동기화됨'으로 간주 (새로운 시작)
+                        setSyncStatus('synced');
+                    }
+                } catch (error) {
+                    console.error('Auto-load failed:', error);
+                    // 실패해도 사용자에게 방해되지 않도록 조용히 처리하거나 에러 표시
+                    setSyncStatus('error');
+                }
+            } else {
+                setSyncStatus('synced'); // 비로그인 상태면 로컬만 쓰므로 synced로 간주
+            }
+        };
+
+        initData();
+    }, [status, loadFirstLivingData, setItems, setCategories]);
+
+    // 2. 자동 저장 (Auto-Save with Debounce)
     useEffect(() => {
-        // 초기 로딩 후 스케줄링 체크
+        // 초기 로드 중이거나 로그인이 안 되어 있으면 저장하지 않음
+        if (isInitialLoad || status !== 'authenticated') return;
+
+        // 변경 사항이 생기면 '저장 중...' 상태로 변경
+        setSyncStatus('saving');
+
+        // 기존 타이머 취소
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+        }
+
+        // 2초 후 저장 실행
+        autoSaveTimerRef.current = setTimeout(async () => {
+            try {
+                const response = await fetch('/api/calculator/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: items, categories: categories }),
+                });
+
+                if (!response.ok) throw new Error('Auto-save failed');
+
+                setSyncStatus('synced');
+                setLastSavedTime(new Date());
+            } catch (error) {
+                console.error('Auto-save error:', error);
+                setSyncStatus('error');
+            }
+        }, 2000);
+
+        return () => {
+            if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+            }
+        };
+    }, [items, categories, status, isInitialLoad]);
+
+    // 3. 스케줄링 체크
+    useEffect(() => {
         if (items.length > 0) {
             checkAndApplyScheduling();
         }
 
-        // 하루에 한 번씩 스케줄링 체크 (자정에 실행되도록)
         const now = new Date();
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -48,12 +125,9 @@ export default function LivingCalculatorPage() {
 
         const timeoutId = setTimeout(() => {
             checkAndApplyScheduling();
-
-            // 그 이후로는 24시간마다 체크
             const intervalId = setInterval(() => {
                 checkAndApplyScheduling();
-            }, 24 * 60 * 60 * 1000); // 24시간
-
+            }, 24 * 60 * 60 * 1000);
             return () => clearInterval(intervalId);
         }, msUntilTomorrow);
 
@@ -71,77 +145,41 @@ export default function LivingCalculatorPage() {
         }
     };
 
-    const handleSave = async () => {
-        if (status !== 'authenticated') {
-            setShowError('로그인이 필요합니다.');
-            setTimeout(() => setShowError(''), 3000);
-            return;
-        }
+    // 상태 아이콘 렌더링
+    const renderSyncStatus = () => {
+        if (status !== 'authenticated') return null;
 
-        if (isSaving) return;
-
-        setIsSaving(true);
-        try {
-            const response = await fetch('/api/calculator/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ data: items, categories: categories }),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || '저장 실패');
-            }
-
-            setShowSaveSuccess(true);
-            setTimeout(() => setShowSaveSuccess(false), 3000);
-        } catch (error) {
-            console.error('저장 실패:', error);
-            setShowError(error instanceof Error ? error.message : '저장에 실패했습니다.');
-            setTimeout(() => setShowError(''), 3000);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const handleLoad = async () => {
-        if (status !== 'authenticated') {
-            setShowError('로그인이 필요합니다.');
-            setTimeout(() => setShowError(''), 3000);
-            return;
-        }
-
-        if (isLoading) return;
-
-        setIsLoading(true);
-        try {
-            const response = await fetch('/api/calculator/load');
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || '불러오기 실패');
-            }
-
-            if (result.data) {
-                setItems(result.data);
-                if (result.categories && Array.isArray(result.categories) && result.categories.length > 0) {
-                    setCategories(result.categories);
-                }
-                setShowLoadSuccess(true);
-                setTimeout(() => setShowLoadSuccess(false), 3000);
-            } else {
-                setShowError('저장된 데이터가 없습니다.');
-                setTimeout(() => setShowError(''), 3000);
-            }
-        } catch (error) {
-            console.error('불러오기 실패:', error);
-            setShowError(error instanceof Error ? error.message : '불러오기에 실패했습니다.');
-            setTimeout(() => setShowError(''), 3000);
-        } finally {
-            setIsLoading(false);
+        switch (syncStatus) {
+            case 'saving':
+                return (
+                    <div className="flex items-center text-gray-400 text-xs gap-1" title="저장 중...">
+                        <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="hidden sm:inline">저장 중...</span>
+                    </div>
+                );
+            case 'synced':
+                return (
+                    <div className="flex items-center text-green-500 text-xs gap-1" title={lastSavedTime ? `마지막 저장: ${lastSavedTime.toLocaleTimeString()}` : '동기화됨'}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="hidden sm:inline">저장됨</span>
+                    </div>
+                );
+            case 'error':
+                return (
+                    <div className="flex items-center text-red-500 text-xs gap-1" title="저장 실패">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span className="hidden sm:inline">저장 실패</span>
+                    </div>
+                );
+            default:
+                return null;
         }
     };
 
@@ -150,8 +188,14 @@ export default function LivingCalculatorPage() {
             <div className="min-h-screen bg-gray-900">
                 <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-2xl">
                     {/* 메인 헤더 */}
-                    <div className="text-center mb-6 sm:mb-8">
-                        <h1 className={`${TokenStyles.livingCalculator.title} mb-2 sm:mb-3`}>생활비 계산기</h1>
+                    <div className="text-center mb-6 sm:mb-8 relative">
+                        <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
+                            <h1 className={`${TokenStyles.livingCalculator.title}`}>생활비 계산기</h1>
+                            {/* 상태 표시기 (제목 옆) */}
+                            <div className="absolute right-4 top-1 sm:static sm:top-auto sm:right-auto">
+                                {renderSyncStatus()}
+                            </div>
+                        </div>
                         <p className={`${TokenStyles.livingCalculator.subtitle} px-4`}>월간 수입과 지출을 관리하고 일일 사용 가능 금액을 확인하세요</p>
                     </div>
 
@@ -172,12 +216,12 @@ export default function LivingCalculatorPage() {
                 </div>
             </div>
 
-            {/* 플로팅 메뉴 */}
+            {/* 플로팅 메뉴 (저장/로드 제거됨) */}
             <FloatingMenu
                 onExport={handleExport}
-                onSave={status === 'authenticated' ? handleSave : undefined}
-                onLoad={status === 'authenticated' ? handleLoad : undefined}
+                // onSave와 onLoad는 자동화되었으므로 제거
                 onManageCategories={() => setIsCategoryManagementOpen(true)}
+                onShowStatistics={() => setIsStatisticsOpen(true)}
             />
 
             {/* 토스트 메시지들 */}
@@ -192,43 +236,16 @@ export default function LivingCalculatorPage() {
                 </div>
             )}
 
-            {showSaveSuccess && (
-                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
-                    <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        DB에 저장되었습니다!
-                    </div>
-                </div>
-            )}
-
-            {showLoadSuccess && (
-                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
-                    <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        DB에서 불러왔습니다!
-                    </div>
-                </div>
-            )}
-
-            {showError && (
-                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300">
-                    <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        {showError}
-                    </div>
-                </div>
-            )}
-
             {/* 섹션 관리 모달 */}
             <CategoryManagementModal
                 isOpen={isCategoryManagementOpen}
                 onClose={() => setIsCategoryManagementOpen(false)}
+            />
+
+            {/* 통계 모달 */}
+            <StatisticsModal
+                isOpen={isStatisticsOpen}
+                onClose={() => setIsStatisticsOpen(false)}
             />
 
             <Modal

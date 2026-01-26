@@ -7,9 +7,10 @@ interface FloatingMenuProps {
   onSave?: () => void;
   onLoad?: () => void;
   onManageCategories?: () => void;
+  onShowStatistics?: () => void;
 }
 
-const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport, onSave, onLoad, onManageCategories }) => {
+const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport, onSave, onLoad, onManageCategories, onShowStatistics }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -114,6 +115,43 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onExport, onSave, onLoad, o
               </svg>
             </button>
           </div>
+
+          {/* 통계 보기 버튼 */}
+          {onShowStatistics && (
+            <div className="flex items-center gap-2 justify-end">
+              <span className="bg-purple-600 text-white text-xs sm:text-sm px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap font-medium">
+                통계 보기
+              </span>
+              <button
+                onClick={() => {
+                  onShowStatistics();
+                  setIsOpen(false);
+                }}
+                className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all duration-200 transform hover:scale-110"
+                title="통계 보기"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
 
           {/* 섹션 관리 버튼 */}
           {onManageCategories && (

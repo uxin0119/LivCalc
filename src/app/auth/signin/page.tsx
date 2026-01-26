@@ -9,6 +9,7 @@ export default function SignInPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -82,6 +83,19 @@ export default function SignInPage() {
               className="w-full p-3 border border-gray-700 rounded-lg text-sm bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••••"
             />
+          </div>
+
+          <div className="flex items-center mb-6">
+            <input
+              id="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-700 rounded focus:ring-blue-500 focus:ring-2"
+            />
+            <label htmlFor="remember-me" className="ml-2 text-sm text-gray-300 cursor-pointer select-none">
+              로그인 상태 유지
+            </label>
           </div>
 
           <button
