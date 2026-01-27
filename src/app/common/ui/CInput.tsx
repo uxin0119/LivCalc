@@ -127,6 +127,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     return (
             <input
                 type={type==="currency"?"text":type}
+                inputMode={type==="currency"?"numeric":undefined}
                 value={displayValue}
                 onChange={handleChange}
                 onFocus={handleFocus}

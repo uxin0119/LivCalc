@@ -105,6 +105,7 @@ const CInputCurrency: React.FC<InputProps> = ({
     return (
             <input
                 type="text"
+                inputMode="numeric"
                 value={showValue}
                 onChange={handleChange}
                 onFocus={handleFocus}
