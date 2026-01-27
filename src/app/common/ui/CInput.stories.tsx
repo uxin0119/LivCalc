@@ -88,7 +88,7 @@ export const Currency: Story = {
     type: 'currency',
     placeholder: '금액 입력',
     size: 'md',
-    value: '1,000,000',
+    value: "1000000",
   },
   render: (args) => <InputWrapper {...args} />,
 };

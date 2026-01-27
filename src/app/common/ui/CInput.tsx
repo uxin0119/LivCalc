@@ -52,6 +52,24 @@ const CInput: React.FC<InputProps> = ({
         ? 'opacity-50 cursor-not-allowed'
         : '';
 
+    // 숫자를 콤마 포맷으로 변환하는 헬퍼 함수
+    const formatCurrency = (val: string | number) => {
+        if (val === undefined || val === null || val === '') return '';
+        const numericValue = typeof val === 'string' ? val.replace(/,/g, '') : String(val);
+        const num = Number(numericValue);
+        if (isNaN(num)) return val;
+        return num.toLocaleString('ko-KR');
+    };
+
+    const [displayValue, setDisplayValue] = React.useState(() => 
+        type === 'currency' ? formatCurrency(value) : value
+    );
+
+    // 외부에서 value 프로프가 변경될 때 동기화
+    React.useEffect(() => {
+        setDisplayValue(type === 'currency' ? formatCurrency(value) : value);
+    }, [value, type]);
+
     const combinedClasses = `
         ${baseClasses}
         ${sizeClasses[size]}
@@ -71,22 +89,28 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // 빈 문자열 체크
         if (!numericValue) {
             onChange('');
+            setDisplayValue('');
             return;
         }
 
         try {
             // 숫자로 변환하고 포맷팅
-            const formatted = Number(numericValue).toLocaleString('ko-KR');
+            const num = Number(numericValue);
+            const formatted = num.toLocaleString('ko-KR');
+            setDisplayValue(formatted);
             onChange(formatted);
         } catch {
             // 변환 실패 시 이전 값 유지
+            setDisplayValue(e.target.value);
             onChange(e.target.value);
         }
         return;
     }
 
     if (typeof onChange === 'function') {
-        onChange(e.target.value);
+        const val = e.target.value;
+        setDisplayValue(val);
+        onChange(val);
     }
 };
 
@@ -103,7 +127,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     return (
             <input
                 type={type==="currency"?"text":type}
-                value={value}
+                value={displayValue}
                 onChange={handleChange}
                 onFocus={handleFocus}
                 placeholder={placeholder}

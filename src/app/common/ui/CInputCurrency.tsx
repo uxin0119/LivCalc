@@ -45,7 +45,21 @@ const CInputCurrency: React.FC<InputProps> = ({
         lg: 'px-4 py-3 text-base'
     };
 
-    const [showValue, setShowValue] = React.useState(value);
+    // 숫자를 콤마 포맷으로 변환하는 헬퍼 함수
+    const formatNumber = (val: string | number) => {
+        if (val === undefined || val === null || val === '') return '';
+        const numericValue = typeof val === 'string' ? val.replace(/,/g, '') : String(val);
+        const num = Number(numericValue);
+        if (isNaN(num)) return val;
+        return num.toLocaleString('ko-KR');
+    };
+
+    const [showValue, setShowValue] = React.useState(() => formatNumber(value));
+
+    // 외부에서 value 프로프가 변경될 때 표시되는 값 동기화
+    React.useEffect(() => {
+        setShowValue(formatNumber(value));
+    }, [value]);
 
     const disabledClasses = disabled || readOnly
         ? 'opacity-50 cursor-not-allowed'
