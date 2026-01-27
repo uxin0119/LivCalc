@@ -139,14 +139,22 @@ export default function HistoryPage() {
                                 </div>
                                 
                                 {log ? (
-                                    <div className="flex flex-col items-end">
-                                        <div className="text-[10px] sm:text-xs text-gray-500 font-medium mb-0.5">사용 가능</div>
-                                        <div className="text-[11px] sm:text-sm font-bold text-emerald-400 truncate w-full text-right">
-                                            {formatCurrency(log.daily_available)}
+                                    <div className="flex flex-col items-end w-full gap-1">
+                                        <div className="flex flex-col items-end w-full">
+                                            <div className="text-[9px] sm:text-[10px] text-gray-500 font-medium">월 잔액</div>
+                                            <div className="text-[10px] sm:text-xs font-medium text-gray-300 truncate w-full text-right">
+                                                {formatCurrency(log.total_expense)}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end w-full">
+                                            <div className="text-[9px] sm:text-[10px] text-gray-500 font-medium">일 가용</div>
+                                            <div className="text-[11px] sm:text-sm font-bold text-emerald-400 truncate w-full text-right">
+                                                {formatCurrency(log.daily_available)}
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="h-4 flex items-center justify-end opacity-20">
+                                    <div className="h-4 flex items-center justify-end opacity-20 mt-auto">
                                         <div className="w-4 h-0.5 bg-gray-600 rounded-full" />
                                     </div>
                                 )}
