@@ -113,6 +113,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </p>
             </div>
 
+            {/* 화폐 단위 설정 */}
+            <div>
+                <h3 className={TokenStyles.modal.sectionTitle}>화폐 단위 설정</h3>
+                <div className="flex gap-2">
+                    {(['KRW', 'USD', 'JPY'] as const).map((currency) => (
+                        <button
+                            key={currency}
+                            onClick={() => onUpdateField('currency', currency)}
+                            className={`flex-1 py-2 sm:py-3 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ${
+                                (item.currency || 'KRW') === currency
+                                    ? 'bg-gray-900 text-white border-gray-900 shadow-md'
+                                    : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            {currency}
+                        </button>
+                    ))}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                    * {item.currency === 'USD' ? '달러' : item.currency === 'JPY' ? '엔화' : '원화'}로 계산되며, 총액에는 환율이 적용되어 합산됩니다.
+                </p>
+            </div>
+
             {/* 유효 기간 설정 */}
             <div>
                 <h3 className={TokenStyles.modal.sectionTitle}>월간 자동화 설정</h3>
@@ -276,7 +299,9 @@ const InactiveItemContent: React.FC<InactiveItemContentProps> = ({
                 <span className="text-sm text-gray-600 truncate">
                     {item.name || "이름 없는 항목"}
                 </span>
-                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">(비활성화)</span>
+                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                    (비활성화{item.currency && item.currency !== 'KRW' ? ` - ${item.currency}` : ''})
+                </span>
             </div>
             {item.activationDay && (
                 <div className="text-[10px] text-green-500 flex items-center gap-1 mt-0.5">
@@ -377,6 +402,10 @@ import MergeTooltip from './MergeTooltip';
 
 // ... (other imports)
 
+import { ExchangeService } from './exchangeService';
+
+// ...
+
 const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
     item,
     placeholder,
@@ -393,6 +422,8 @@ const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
         // 수입이든 지출이든 입력된 금액만큼 더함 (지출도 절대값으로 관리되므로)
         onValueChange(currentVal + amount);
     };
+    
+    const symbol = ExchangeService.getCurrencySymbol(item.currency || 'KRW');
 
     return (
         <div className="flex min-h-20 relative">
@@ -423,13 +454,16 @@ const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
                             currentType={item.type}
                         />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium z-10 select-none">
+                            {symbol}
+                        </span>
                         <CInputCurrency
                             value={item.value}
                             onChange={(value) => onValueChange(Number(value))}
                             placeholder={placeholder}
                             min={0}
-                            className={TokenStyles.livingCalculator.input.currency}
+                            className={`${TokenStyles.livingCalculator.input.currency} pl-8`}
                             selectOnFocus={true}
                             disabled={isDragging}
                         />
