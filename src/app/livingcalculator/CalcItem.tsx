@@ -373,6 +373,10 @@ const ScheduleIndicator = ({ activationDay, deactivationDay }: { activationDay?:
     return null;
 };
 
+import MergeTooltip from './MergeTooltip';
+
+// ... (other imports)
+
 const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
     item,
     placeholder,
@@ -381,41 +385,61 @@ const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
     onNameChange,
     onValueChange,
     onSettingsClick,
-}) => (
-    <div className="flex min-h-20 relative">
-        <ScheduleIndicator activationDay={item.activationDay} deactivationDay={item.deactivationDay} />
-        <DragHandle dragHandleProps={dragHandleProps} />
-        <div className="flex-1 p-4 space-y-3">
-            <CInput
-                type="text"
-                value={item.name}
-                onChange={onNameChange}
-                placeholder="항목명 입력"
-                className={TokenStyles.livingCalculator.input.text}
-                disabled={isDragging}
-            />
-            <div className="flex items-center gap-2 min-w-0">
-                <div className="flex-shrink-0">
-                    <div className={item.type === "plus" ? TokenStyles.livingCalculator.typeIcon.plus : TokenStyles.livingCalculator.typeIcon.minus}>
-                        {item.type === "plus" ? "+" : "−"}
+}) => {
+    const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+
+    const handleMerge = (amount: number) => {
+        const currentVal = item.value || 0;
+        // 수입이든 지출이든 입력된 금액만큼 더함 (지출도 절대값으로 관리되므로)
+        onValueChange(currentVal + amount);
+    };
+
+    return (
+        <div className="flex min-h-20 relative">
+            <ScheduleIndicator activationDay={item.activationDay} deactivationDay={item.deactivationDay} />
+            <DragHandle dragHandleProps={dragHandleProps} />
+            <div className="flex-1 p-4 space-y-3">
+                <CInput
+                    type="text"
+                    value={item.name}
+                    onChange={onNameChange}
+                    placeholder="항목명 입력"
+                    className={TokenStyles.livingCalculator.input.text}
+                    disabled={isDragging}
+                />
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex-shrink-0 relative z-20">
+                        <div 
+                            className={`${item.type === "plus" ? TokenStyles.livingCalculator.typeIcon.plus : TokenStyles.livingCalculator.typeIcon.minus} cursor-pointer hover:opacity-80 transition-opacity`}
+                            onClick={() => setIsTooltipOpen(!isTooltipOpen)}
+                            title="클릭하여 금액 합산"
+                        >
+                            {item.type === "plus" ? "+" : "−"}
+                        </div>
+                        <MergeTooltip
+                            isOpen={isTooltipOpen}
+                            onClose={() => setIsTooltipOpen(false)}
+                            onConfirm={handleMerge}
+                            currentType={item.type}
+                        />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <CInputCurrency
+                            value={item.value}
+                            onChange={(value) => onValueChange(Number(value))}
+                            placeholder={placeholder}
+                            min={0}
+                            className={TokenStyles.livingCalculator.input.currency}
+                            selectOnFocus={true}
+                            disabled={isDragging}
+                        />
                     </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                    <CInputCurrency
-                        value={item.value}
-                        onChange={(value) => onValueChange(Number(value))}
-                        placeholder={placeholder}
-                        min={0}
-                        className={TokenStyles.livingCalculator.input.currency}
-                        selectOnFocus={true}
-                        disabled={isDragging}
-                    />
-                </div>
             </div>
+            <SettingsButton onClick={onSettingsClick} />
         </div>
-        <SettingsButton onClick={onSettingsClick} />
-    </div>
-);
+    );
+};
 
 /**
  * 드래그 가능한 아이템 폼 컴포넌트

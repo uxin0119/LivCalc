@@ -2,38 +2,23 @@ import React from 'react';
 
 type InputSize = 'sm' | 'md' | 'lg';
 
-interface InputProps {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value' | 'size'> {
     value: string | number;
     onChange: (value2:number) => void;
-    placeholder?: string;
-    disabled?: boolean;
-    readOnly?: boolean;
     size?: InputSize;
-    className?: string;
-    required?: boolean;
-    min?: number;
-    max?: number;
-    step?: number;
-    onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
-    selectOnFocus?: boolean; // 새로 추가된 prop
+    selectOnFocus?: boolean;
 }
-
 
 const CInputCurrency: React.FC<InputProps> = ({
                                         value,
                                         onChange,
-                                        placeholder,
-                                        disabled = false,
-                                        readOnly = false,
                                         size = 'md',
                                         className = '',
-                                        required = false,
-                                        min,
-                                        max,
-                                        step,
+                                        selectOnFocus = false,
+                                        disabled,
+                                        readOnly,
                                         onFocus,
-                                        selectOnFocus = false
-
+                                        ...rest
                                       }) => {
     const baseClasses = '' +
         'text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ' +
@@ -104,18 +89,14 @@ const CInputCurrency: React.FC<InputProps> = ({
 
     return (
             <input
+                {...rest}
                 type="text"
                 inputMode="numeric"
                 value={showValue}
                 onChange={handleChange}
                 onFocus={handleFocus}
-                placeholder={placeholder}
                 disabled={disabled}
                 readOnly={readOnly}
-                required={required}
-                min={min}
-                max={max}
-                step={step}
                 className={combinedClasses}
             />
     );
