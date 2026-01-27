@@ -13,6 +13,7 @@ type CalcData = {
     deactivationDate?: string;  // Legacy: ISO 8601 날짜 문자열
     activationDay?: number; // 자동 활성화일 (매월 1-31일)
     deactivationDay?: number; // 자동 비활성화일 (매월 1-31일)
+    modificationDay?: number; // 수정 권고일 (매월 1-31일)
     hasSchedule?: boolean;  // 스케줄링 기능 사용 여부
 };
 export default CalcData;

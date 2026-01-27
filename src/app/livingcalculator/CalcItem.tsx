@@ -221,6 +221,48 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             </div>
                         )}
                     </div>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+
+                    {/* 수정 권고 알림 */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                                수정 권고 알림 (매월)
+                            </span>
+                            <div
+                                className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
+                                    item.modificationDay ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                                }`}
+                                onClick={() => onUpdateField('modificationDay', item.modificationDay ? undefined : 1)}
+                            >
+                                <div
+                                    className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                                        item.modificationDay ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                />
+                            </div>
+                        </div>
+                        {item.modificationDay && (
+                            <div className="animate-fadeIn pl-2 border-l-2 border-purple-500">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">매월</span>
+                                    <CInput
+                                        type="number"
+                                        value={item.modificationDay}
+                                        onChange={(val) => onUpdateField('modificationDay', Number(val))}
+                                        min={1}
+                                        max={31}
+                                        className={TokenStyles.common.input.base + " w-20 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"}
+                                    />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">일에 확인</span>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    * 해당 일자가 되면 '금액 확인 필요' 알림이 표시됩니다.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -341,10 +383,36 @@ interface ActiveItemContentProps {
 /**
  * 날짜 표시 인디케이터
  */
-const ScheduleIndicator = ({ activationDay, deactivationDay }: { activationDay?: number, deactivationDay?: number }) => {
-    if (!activationDay && !deactivationDay) return null;
+const ScheduleIndicator = ({ activationDay, deactivationDay, modificationDay }: { activationDay?: number, deactivationDay?: number, modificationDay?: number }) => {
+    if (!activationDay && !deactivationDay && !modificationDay) return null;
     
     const today = new Date().getDate();
+
+    // 수정 권고 표시 (가장 높은 우선순위)
+    if (modificationDay) {
+        const isToday = today === modificationDay;
+        const diff = modificationDay - today;
+        
+        if (isToday) {
+            return (
+                <div className="text-[10px] sm:text-xs flex items-center gap-1 text-purple-300 font-bold animate-pulse absolute right-2 top-2 bg-purple-900/80 px-2 py-0.5 rounded-full backdrop-blur-sm z-10 border border-purple-500">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    금액 확인 필요
+                </div>
+            );
+        } else if (diff > 0 && diff <= 3) {
+             return (
+                <div className="text-[10px] sm:text-xs flex items-center gap-1 text-purple-400 font-medium absolute right-2 top-2 bg-gray-900/50 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {diff}일 후 확인
+                </div>
+            );
+        }
+    }
     
     // 매월 활성화 표시
     if (activationDay) {
@@ -427,7 +495,11 @@ const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
 
     return (
         <div className="flex min-h-20 relative">
-            <ScheduleIndicator activationDay={item.activationDay} deactivationDay={item.deactivationDay} />
+            <ScheduleIndicator 
+                activationDay={item.activationDay} 
+                deactivationDay={item.deactivationDay} 
+                modificationDay={item.modificationDay}
+            />
             <DragHandle dragHandleProps={dragHandleProps} />
             <div className="flex-1 p-4 space-y-3">
                 <CInput
