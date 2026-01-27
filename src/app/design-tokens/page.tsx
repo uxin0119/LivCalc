@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { DesignTokens } from "@/app/common/tokens/DesignTokens";
 import { TokenStyles } from "@/app/common/tokens/TokenStyles";
 import CButton from "@/app/common/ui/CButton";
@@ -26,6 +27,63 @@ const ColorSwatch = ({ name, value }: { name: string; value: string }) => (
 );
 
 const DesignTokensPage = () => {
+  const { status } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      checkAdmin();
+    } else if (status === 'unauthenticated') {
+      setLoading(false); // 로딩 끝, 로그인 필요 화면 등은 아래에서 처리 (현재는 accessDenied로 통일 가능)
+    }
+  }, [status]);
+
+  const checkAdmin = async () => {
+    try {
+      const response = await fetch('/api/settings');
+      const result = await response.json();
+      
+      if (result.isAdmin) {
+        setAccessDenied(false);
+      } else {
+        setAccessDenied(true);
+      }
+    } catch (error) {
+      console.error('Failed to check admin status:', error);
+      setAccessDenied(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (status === 'loading' || loading) {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-900 text-gray-400">
+            로딩 중...
+        </div>
+    );
+  }
+
+  if (status === 'unauthenticated' || accessDenied) {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-900 px-4 text-center">
+            <div className="bg-gray-800/50 p-8 rounded-2xl border border-gray-700">
+                <div className="text-red-500 mb-4">
+                    <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">접근 권한이 없습니다</h2>
+                <p className="text-gray-400">
+                    이 페이지는 관리자 전용 페이지입니다.<br/>
+                    관리자 계정으로 로그인해 주세요.
+                </p>
+            </div>
+        </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <h1 className="text-4xl font-bold mb-8 text-center">Design System</h1>

@@ -14,15 +14,55 @@ interface pagesProps {
 export default function Sidebar() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const pages: pagesProps[] = [
         { url: "/livingcalculator", name: "생활비 계산기", selected: false },
         { url: "/history", name: "자산 기록 달력", selected: false },
         { url: "/design-tokens", name: "디자인 토큰", selected: false },
+        { url: "/settings", name: "사이트 설정", selected: false },
     ]
 
     const [statePages, setStatePages] = useState<pagesProps[]>(pages);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // 관리자 여부 체크 및 메뉴 필터링
+    useEffect(() => {
+        const checkAdmin = async () => {
+            if (status === 'authenticated') {
+                try {
+                    const response = await fetch('/api/settings');
+                    const result = await response.json();
+                    const currentIsAdmin = !!result.isAdmin;
+                    setIsAdmin(currentIsAdmin);
+                    
+                    // 메뉴 필터링
+                    const filteredPages = pages.filter(page => {
+                        if (page.url === '/design-tokens' || page.url === '/settings') {
+                            return currentIsAdmin;
+                        }
+                        return true;
+                    });
+                    
+                    // 현재 선택된 상태 유지하며 업데이트
+                    filteredPages.forEach(page => {
+                        page.selected = window.location.pathname === page.url;
+                    });
+                    setStatePages(filteredPages);
+                } catch (error) {
+                    console.error('Failed to check admin in sidebar:', error);
+                }
+            } else {
+                // 비로그인 시 관리자 메뉴 제외
+                const filteredPages = pages.filter(page => 
+                    page.url !== '/design-tokens' && page.url !== '/settings'
+                );
+                setStatePages(filteredPages);
+            }
+        };
+
+        checkAdmin();
+    }, [status]);
 
     const changePageSelected = (index: number) => {
         const newPages = [...statePages];

@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { TokenStyles } from "@/app/common/tokens/TokenStyles";
 
 export interface SelectOption {
     value: string;
@@ -28,7 +28,7 @@ const CSelect: React.FC<SelectProps> = ({
                                            className = '',
                                            required = false
                                        }) => {
-    const baseClasses = 'border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white';
+    const baseClasses = TokenStyles.common.input.base;
 
     const sizeClasses = {
         sm: 'px-2 py-1 text-sm',
@@ -37,8 +37,8 @@ const CSelect: React.FC<SelectProps> = ({
     };
 
     const disabledClasses = disabled
-        ? 'bg-gray-50 cursor-not-allowed opacity-60'
-        : 'bg-white cursor-pointer';
+        ? 'opacity-50 cursor-not-allowed'
+        : 'cursor-pointer';
 
     const combinedClasses = `
         ${baseClasses}
@@ -60,7 +60,7 @@ const CSelect: React.FC<SelectProps> = ({
                 className={combinedClasses}
             >
                 {placeholder && (
-                    <option value="" disabled>
+                    <option value="" disabled className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                         {placeholder}
                     </option>
                 )}
@@ -69,6 +69,7 @@ const CSelect: React.FC<SelectProps> = ({
                         key={option.value}
                         value={option.value}
                         disabled={option.disabled}
+                        className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                         {option.label}
                     </option>

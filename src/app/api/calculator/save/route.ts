@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { query } from '@/lib/db';
+import { query, queryOne } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    // ... (existing code omitted for brevity in instruction, but I'll provide full block in replacement)
     // 인증 확인
     const session = await auth();
     if (!session || !session.user) {
@@ -65,10 +66,14 @@ export async function POST(request: Request) {
         [session.user.id, dailyAvailable || 0, monthTotal || 0]
       );
 
-      // 3. 오래된 로그 삭제 (2달 지난 데이터)
-      // 매번 실행하면 부담이 될 수 있지만, 개인용 앱 규모에서는 문제 없음.
+      // 3. 오래된 로그 삭제 (설정된 기간 적용)
+      const setting = await queryOne<any>(
+        "SELECT value FROM site_settings WHERE key = 'calendar_retention_period'"
+      );
+      const retentionMonths = parseInt(setting?.value || '2', 10);
+      
       await query(
-        "DELETE FROM calculator_logs WHERE created_at < NOW() - INTERVAL '2 months'"
+        `DELETE FROM calculator_logs WHERE created_at < NOW() - INTERVAL '${retentionMonths} months'`
       );
     }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { query } from '@/lib/db';
+import { query, queryOne } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,9 +71,14 @@ export async function POST(request: Request) {
       [session.user.id, date, content]
     );
 
-    // 2개월 지난 메모 자동 삭제
+    // 설정된 기간이 지난 메모 자동 삭제
+    const setting = await queryOne<any>(
+        "SELECT value FROM site_settings WHERE key = 'calendar_retention_period'"
+    );
+    const retentionMonths = parseInt(setting?.value || '2', 10); // 기본값 2개월
+      
     await query(
-        "DELETE FROM calendar_memos WHERE memo_date < CURRENT_DATE - INTERVAL '2 months'"
+        `DELETE FROM calendar_memos WHERE memo_date < CURRENT_DATE - INTERVAL '${retentionMonths} months'`
     );
 
     return NextResponse.json({ message: 'Memo saved' });
