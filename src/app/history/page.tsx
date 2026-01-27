@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
+import Modal from '@/app/common/components/Modal';
+import CButton from '@/app/common/ui/CButton';
+import CTextarea from '@/app/common/ui/CTextarea';
 
 interface HistoryLog {
     id: string;
@@ -11,17 +14,29 @@ interface HistoryLog {
     total_expense: number;
 }
 
+interface MemoMap {
+    [date: string]: string;
+}
+
 export default function HistoryPage() {
     const { status } = useSession();
     const [logs, setLogs] = useState<HistoryLog[]>([]);
+    const [memos, setMemos] = useState<MemoMap>({});
     const [loading, setLoading] = useState(true);
     const [currentDate, setCurrentDate] = useState(new Date());
+
+    // Memo Modal State
+    const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState<string>('');
+    const [memoContent, setMemoContent] = useState<string>('');
+    const [isSavingMemo, setIsSavingMemo] = useState(false);
 
     useEffect(() => {
         if (status === 'authenticated') {
             fetchHistory();
+            fetchMemos();
         }
-    }, [status]);
+    }, [status, currentDate]); // currentDate 변경 시에도 메모 다시 조회 (월별)
 
     const fetchHistory = async () => {
         setLoading(true);
@@ -35,6 +50,65 @@ export default function HistoryPage() {
             console.error('Failed to fetch history:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchMemos = async () => {
+        try {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            const response = await fetch(`/api/history/memo?year=${year}&month=${month}`);
+            const result = await response.json();
+            
+            if (result.memos) {
+                const memoMap: MemoMap = {};
+                result.memos.forEach((m: { date: string, content: string }) => {
+                    memoMap[m.date] = m.content;
+                });
+                setMemos(memoMap);
+            }
+        } catch (error) {
+            console.error('Failed to fetch memos:', error);
+        }
+    };
+
+    const handleDateClick = (dateStr: string) => {
+        setSelectedDate(dateStr);
+        setMemoContent(memos[dateStr] || '');
+        setIsMemoModalOpen(true);
+    };
+
+    const handleSaveMemo = async () => {
+        if (!selectedDate) return;
+        
+        setIsSavingMemo(true);
+        try {
+            const response = await fetch('/api/history/memo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: selectedDate, content: memoContent })
+            });
+
+            if (response.ok) {
+                // 로컬 상태 업데이트
+                setMemos(prev => {
+                    const next = { ...prev };
+                    if (memoContent.trim()) {
+                        next[selectedDate] = memoContent;
+                    } else {
+                        delete next[selectedDate];
+                    }
+                    return next;
+                });
+                setIsMemoModalOpen(false);
+            } else {
+                alert('메모 저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Save memo error:', error);
+            alert('오류가 발생했습니다.');
+        } finally {
+            setIsSavingMemo(false);
         }
     };
 
@@ -122,12 +196,14 @@ export default function HistoryPage() {
 
                         const log = getLogForDate(item.dateStr);
                         const isToday = item.dateStr === new Date().toISOString().split('T')[0];
+                        const hasMemo = !!memos[item.dateStr];
 
                         return (
                             <div 
                                 key={item.dateStr} 
+                                onClick={() => handleDateClick(item.dateStr)}
                                 className={`
-                                    aspect-square p-2 rounded-xl border flex flex-col justify-between relative group
+                                    aspect-square p-2 rounded-xl border flex flex-col justify-between relative group cursor-pointer
                                     ${isToday ? 'bg-blue-900/20 border-blue-500 ring-1 ring-blue-500' : 'bg-gray-800/40 border-gray-800 hover:bg-gray-800 hover:border-gray-700'}
                                     transition-all duration-200
                                 `}
@@ -136,6 +212,13 @@ export default function HistoryPage() {
                                     <span className={`text-sm font-medium ${isToday ? 'text-blue-400' : 'text-gray-500'}`}>
                                         {item.day}
                                     </span>
+                                    {hasMemo && (
+                                        <div className="text-yellow-500 animate-fadeIn" title="메모 있음">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 {log ? (
@@ -168,13 +251,39 @@ export default function HistoryPage() {
                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
                         기록 있음
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-gray-700" />
-                        기록 없음
+                    <div className="flex items-center gap-1.5 text-yellow-500">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        메모 있음
                     </div>
-                    <span className="ml-4 italic">* 매 저장 시점의 최종 잔액이 기록됩니다.</span>
                 </div>
             </div>
+
+            {/* 메모 작성 모달 */}
+            <Modal
+                isOpen={isMemoModalOpen}
+                onClose={() => setIsMemoModalOpen(false)}
+                title={`${selectedDate} 메모`}
+            >
+                <div className="space-y-4">
+                    <CTextarea
+                        value={memoContent}
+                        onChange={setMemoContent}
+                        placeholder="이 날의 메모를 입력하세요 (예: 특별 지출 내역, 일기 등)"
+                        rows={6}
+                        className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    />
+                    <div className="flex justify-end gap-2">
+                        <CButton variant="secondary" onClick={() => setIsMemoModalOpen(false)}>
+                            취소
+                        </CButton>
+                        <CButton variant="primary" onClick={handleSaveMemo} disabled={isSavingMemo}>
+                            {isSavingMemo ? '저장 중...' : '저장'}
+                        </CButton>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
