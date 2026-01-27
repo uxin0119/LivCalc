@@ -289,17 +289,73 @@ const useCalcStore = create<CalcState>((set, get) => ({
 
   checkAndApplyScheduling: () => {
     const items = get().items;
-    const changes = getScheduledStateChanges(items);
+    
+    // 1. 기존 스케줄링 변경사항 확인
+    const scheduleChanges = getScheduledStateChanges(items);
+    
+    // 2. 월간 자동화 (Monthly Recurring)
+    const today = new Date();
+    const todayDay = today.getDate(); // 1-31
 
-    if (changes.length > 0) {
-      // 로그 출력 (개발 환경에서만)
+    // 자동 활성화 대상 (비활성 상태 & 오늘이 활성화일)
+    const activationTargets = items.filter(item => 
+        !item.isActive && item.activationDay === todayDay
+    );
+
+    // 자동 비활성화 대상 (활성 상태 & 오늘이 비활성화일)
+    const deactivationTargets = items.filter(item => 
+        item.isActive && item.deactivationDay === todayDay
+    );
+
+    if (scheduleChanges.length > 0 || activationTargets.length > 0 || deactivationTargets.length > 0) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('스케줄링으로 인한 상태 변경:', changes.map(change =>
-          `${change.item.name}: ${change.reason === 'activation' ? '활성화' : '비활성화'}`
-        ).join(', '));
+        if (scheduleChanges.length > 0) {
+            console.log('스케줄링 변경:', scheduleChanges.map(c => c.item.name).join(', '));
+        }
+        if (activationTargets.length > 0) {
+            console.log('매월 자동 활성화:', activationTargets.map(i => i.name).join(', '));
+        }
+        if (deactivationTargets.length > 0) {
+            console.log('매월 자동 비활성화:', deactivationTargets.map(i => i.name).join(', '));
+        }
       }
 
-      get().applyScheduledChanges();
+      // 변경사항 적용
+      const updatedItems = items.map(item => {
+          let newItem = item;
+          let changed = false;
+
+          // 1. 스케줄링 적용 (레거시/복합 스케줄링)
+          if (item.hasSchedule) {
+             const scheduleChange = scheduleChanges.find(c => c.item.id === item.id);
+             if (scheduleChange) {
+                 newItem = { ...newItem, isActive: scheduleChange.newState };
+                 changed = true;
+             }
+          }
+
+          // 2. 매월 자동 활성화 (Recurring)
+          if (!newItem.isActive && newItem.activationDay === todayDay) {
+              newItem = { ...newItem, isActive: true };
+              changed = true;
+          }
+
+          // 3. 매월 자동 비활성화 (Recurring)
+          if (newItem.isActive && newItem.deactivationDay === todayDay) {
+              newItem = { ...newItem, isActive: false };
+              changed = true;
+          }
+
+          return newItem;
+      });
+
+      // 실제로 변경된 경우에만 업데이트
+      if (JSON.stringify(items) !== JSON.stringify(updatedItems)) {
+          set({ items: updatedItems });
+          setTimeout(() => {
+            get().calculateTotals();
+          }, 0);
+      }
     }
   },
 

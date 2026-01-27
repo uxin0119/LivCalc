@@ -113,6 +113,94 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </p>
             </div>
 
+            {/* 유효 기간 설정 */}
+            <div>
+                <h3 className={TokenStyles.modal.sectionTitle}>월간 자동화 설정</h3>
+                <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-4">
+                    {/* 자동 활성화 */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                                자동 활성화 (매월)
+                            </span>
+                            <div
+                                className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
+                                    item.activationDay ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                                }`}
+                                onClick={() => onUpdateField('activationDay', item.activationDay ? undefined : 1)}
+                            >
+                                <div
+                                    className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                                        item.activationDay ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                />
+                            </div>
+                        </div>
+                        {item.activationDay && (
+                            <div className="animate-fadeIn pl-2 border-l-2 border-green-500">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">매월</span>
+                                    <CInput
+                                        type="number"
+                                        value={item.activationDay}
+                                        onChange={(val) => onUpdateField('activationDay', Number(val))}
+                                        min={1}
+                                        max={31}
+                                        className={TokenStyles.common.input.base + " w-20 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"}
+                                    />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">일에 활성화</span>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    * 해당 일자가 되면 자동으로 항목이 켜집니다.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+
+                    {/* 자동 비활성화 */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                                자동 비활성화 (매월)
+                            </span>
+                            <div
+                                className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
+                                    item.deactivationDay ? 'bg-red-600' : 'bg-gray-300 dark:bg-gray-600'
+                                }`}
+                                onClick={() => onUpdateField('deactivationDay', item.deactivationDay ? undefined : 1)}
+                            >
+                                <div
+                                    className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                                        item.deactivationDay ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                />
+                            </div>
+                        </div>
+                        {item.deactivationDay && (
+                            <div className="animate-fadeIn pl-2 border-l-2 border-red-500">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">매월</span>
+                                    <CInput
+                                        type="number"
+                                        value={item.deactivationDay}
+                                        onChange={(val) => onUpdateField('deactivationDay', Number(val))}
+                                        min={1}
+                                        max={31}
+                                        className={TokenStyles.common.input.base + " w-20 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"}
+                                    />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">일에 종료</span>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    * 해당 일자가 되면 자동으로 항목이 꺼집니다.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             {/* 삭제 */}
             <div>
                 <h3 className={TokenStyles.modal.sectionTitle}>위험한 작업</h3>
@@ -181,13 +269,31 @@ const InactiveItemContent: React.FC<InactiveItemContentProps> = ({
     dragHandleProps,
     onSettingsClick,
 }) => (
-    <div className="flex min-h-12">
+    <div className="flex min-h-12 items-center">
         <DragHandle dragHandleProps={dragHandleProps} />
-        <div className="flex-1 px-3 py-2 flex items-center">
-            <span className="text-sm text-gray-600 truncate">
-                {item.name || "이름 없는 항목"}
-            </span>
-            <span className="text-xs text-gray-400 ml-2">(비활성화)</span>
+        <div className="flex-1 px-3 py-2 flex flex-col justify-center overflow-hidden">
+            <div className="flex items-center">
+                <span className="text-sm text-gray-600 truncate">
+                    {item.name || "이름 없는 항목"}
+                </span>
+                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">(비활성화)</span>
+            </div>
+            {item.activationDay && (
+                <div className="text-[10px] text-green-500 flex items-center gap-1 mt-0.5">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    매월 {item.activationDay}일 활성화
+                </div>
+            )}
+            {item.deactivationDay && (
+                <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    매월 {item.deactivationDay}일 종료
+                </div>
+            )}
         </div>
         <SettingsButton onClick={onSettingsClick} />
     </div>
@@ -206,6 +312,67 @@ interface ActiveItemContentProps {
     onSettingsClick: () => void;
 }
 
+
+/**
+ * 날짜 표시 인디케이터
+ */
+const ScheduleIndicator = ({ activationDay, deactivationDay }: { activationDay?: number, deactivationDay?: number }) => {
+    if (!activationDay && !deactivationDay) return null;
+    
+    const today = new Date().getDate();
+    
+    // 매월 활성화 표시
+    if (activationDay) {
+        const isToday = today === activationDay;
+        const diff = activationDay - today;
+        let text = `매월 ${activationDay}일 시작`;
+        let colorClass = "text-green-400 font-medium";
+
+        if (isToday) {
+            text = "오늘 활성화";
+            colorClass = "text-green-300 font-bold animate-pulse";
+        } else if (diff > 0 && diff <= 3) {
+            text = `${diff}일 후 시작`;
+        }
+
+        return (
+            <div className={`text-[10px] sm:text-xs flex items-center gap-1 ${colorClass} absolute right-2 top-2 bg-gray-900/50 px-2 py-0.5 rounded-full backdrop-blur-sm z-10`}>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {text}
+            </div>
+        );
+    }
+
+    // 매월 비활성화 표시
+    if (deactivationDay) {
+        const isToday = today === deactivationDay;
+        const diff = deactivationDay - today;
+        let text = `매월 ${deactivationDay}일 종료`;
+        let colorClass = "text-gray-400";
+        
+        if (isToday) {
+            text = "오늘 종료";
+            colorClass = "text-red-400 font-bold animate-pulse";
+        } else if (diff > 0 && diff <= 3) {
+            text = `${diff}일 후 종료`;
+            colorClass = "text-orange-400 font-medium";
+        }
+
+        return (
+            <div className={`text-[10px] sm:text-xs flex items-center gap-1 ${colorClass} absolute right-2 top-2 bg-gray-900/50 px-2 py-0.5 rounded-full backdrop-blur-sm z-10`}>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {text}
+            </div>
+        );
+    }
+
+    return null;
+};
+
 const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
     item,
     placeholder,
@@ -215,7 +382,8 @@ const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
     onValueChange,
     onSettingsClick,
 }) => (
-    <div className="flex min-h-20">
+    <div className="flex min-h-20 relative">
+        <ScheduleIndicator activationDay={item.activationDay} deactivationDay={item.deactivationDay} />
         <DragHandle dragHandleProps={dragHandleProps} />
         <div className="flex-1 p-4 space-y-3">
             <CInput
