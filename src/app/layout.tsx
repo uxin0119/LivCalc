@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SideNavigation from "@/app/common/components/SideNavigation";
 import { Providers } from "./providers";
+import { TokenStyles } from "@/app/common/tokens/TokenStyles";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -24,7 +25,7 @@ export default function RootLayout({children,}: Readonly<{children: React.ReactN
     return (
         <html lang="en" className="dark">
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}
+                className={`${geistSans.variable} ${geistMono.variable} antialiased ${TokenStyles.common.background.base}`}
             >
                 <Providers>
                     <div className="flex">

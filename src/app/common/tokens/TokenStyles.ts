@@ -67,8 +67,39 @@ export const TokenStyles = {
 
     // 버튼 스타일
     button: {
-      income: 'flex-1 bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200',
+      income: 'flex-1 bg-gray-700 hover:bg-gray-500 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-all duration-200',
       expense: 'flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-lg border border-gray-600 transition-all duration-200',
+    },
+  },
+
+  // 공통 UI 스타일 (DefaultStyle 대체)
+  common: {
+    // 배경색
+    background: {
+      primary: 'bg-white dark:bg-black',
+      secondary: 'bg-gray-50 dark:bg-gray-700',
+      base: 'bg-gray-950 text-white', // App Layout Base
+    },
+    // 텍스트 스타일
+    text: {
+      primary: 'text-gray-800 dark:text-gray-500',
+      secondary: 'text-sm font-medium text-gray-500 dark:text-gray-400',
+      head1: 'text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-300',
+      head2: 'text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300',
+      body1: 'text-sm font-medium',
+      body2: 'font-semibold text-gray-600 dark:text-gray-400',
+      inverse: 'text-lg font-semibold text-gray-900 dark:text-white',
+    },
+    // 버튼 스타일
+    button: {
+      base: 'rounded-md font-medium transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2',
+      primary: 'bg-gray-700 text-white hover:bg-gray-500 focus:ring-gray-500',
+      secondary: 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-400',
+      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    },
+    // 입력 필드 스타일
+    input: {
+      base: 'border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200',
     },
   },
 

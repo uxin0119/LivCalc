@@ -1,5 +1,5 @@
 import React from 'react';
-import DefaultStyle from "@/app/common/script/DefaultStyle";
+import { TokenStyles } from "@/app/common/tokens/TokenStyles";
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -21,12 +21,12 @@ const CButton: React.FC<ButtonProps> = ({
                                            disabled = false,
                                            className = ''
                                        }) => {
-    const baseClasses = 'rounded-md font-medium transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+    const baseClasses = TokenStyles.common.button.base;
 
     const variantClasses = {
-        primary: DefaultStyle.buttonColor1,
-        secondary: DefaultStyle.buttonColor2,
-        danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
+        primary: TokenStyles.common.button.primary,
+        secondary: TokenStyles.common.button.secondary,
+        danger: TokenStyles.common.button.danger
     };
 
     const sizeClasses = {

@@ -1,5 +1,4 @@
 import React from 'react';
-import DefaultStyle from "@/app/common/script/DefaultStyle";
 
 type InputType = 'text' | 'number' |'password'|'currency';
 type InputSize = 'sm' | 'md' | 'lg';

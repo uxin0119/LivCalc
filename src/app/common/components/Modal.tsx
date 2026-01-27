@@ -1,7 +1,7 @@
 // components/Modal.tsx
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import DefaultStyle from "@/app/common/script/DefaultStyle";
+import { TokenStyles } from "@/app/common/tokens/TokenStyles";
 import CButton from "@/app/common/ui/CButton";
 import Icon_x from "@/app/common/icon/icon_x";
 
@@ -81,7 +81,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
             />
 
             {/* 모달 컨텐츠 */}
-            <div className={`relative rounded-lg shadow-xl w-full ${sizeClasses[size]} max-h-[96vh] sm:max-h-[90vh] overflow-y-auto`+' '+DefaultStyle.backgroundColor1}>
+            <div className={`relative rounded-lg shadow-xl w-full ${sizeClasses[size]} max-h-[96vh] sm:max-h-[90vh] overflow-y-auto`+' '+TokenStyles.common.background.primary}>
                 {/* 헤더 */}
                 {title && (
                     <div className="flex items-center justify-between p-2 sm:p-4 border-b border-gray-200">

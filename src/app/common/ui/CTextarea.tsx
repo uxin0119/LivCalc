@@ -1,5 +1,5 @@
 import React from 'react';
-import DefaultStyle from "@/app/common/script/DefaultStyle";
+import { TokenStyles } from "@/app/common/tokens/TokenStyles";
 
 type TextareaSize = 'sm' | 'md' | 'lg';
 
@@ -28,7 +28,7 @@ const CTextarea: React.FC<TextareaProps> = ({
                                                className = '',
                                                required = false
                                            }) => {
-    const baseClasses = 'border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200';
+    const baseClasses = TokenStyles.common.input.base;
 
     const sizeClasses = {
         sm: 'px-2 py-1 text-sm',
@@ -37,8 +37,8 @@ const CTextarea: React.FC<TextareaProps> = ({
     };
 
     const disabledClasses = disabled || readOnly
-        ? DefaultStyle.backgroundColor1+" cursor-not-allowed opacity-60"
-        : DefaultStyle.backgroundColor2;
+        ? TokenStyles.common.background.primary+" cursor-not-allowed opacity-60"
+        : TokenStyles.common.background.secondary;
 
     const resizeClasses = resize ? 'resize-y' : 'resize-none';
 

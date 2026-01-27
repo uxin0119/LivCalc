@@ -1,5 +1,4 @@
 import React from 'react';
-import DefaultStyle from "@/app/common/script/DefaultStyle";
 
 type InputSize = 'sm' | 'md' | 'lg';
 
