@@ -116,7 +116,7 @@ export default function Sidebar() {
 
                 <div className="p-4 flex flex-col h-full">
                     <div className="flex justify-between items-center mb-6">
-                        <div className="text-xl font-bold text-white">내 앱</div>
+                        <div className="text-xl font-bold text-white">LivCalc</div>
                         <div className="flex items-center gap-2">
                             {/* 로그인/로그아웃 버튼 */}
                             <button
