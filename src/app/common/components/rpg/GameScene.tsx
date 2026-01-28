@@ -1,8 +1,30 @@
+import { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Player } from './Player';
-import { Ground, Tree, Rock } from './WorldObjects';
-import { OrbitControls } from '@react-three/drei';
+import { Ground, Tree, Rock, House, Wagon, Log, Grass, DirtPath, Pond } from './WorldObjects';
+import { Enemy } from './Enemy';
+import { useGameStore } from './gameStore';
 
 export const GameScene = () => {
+  const enemies = useGameStore((state) => state.enemies);
+  const moveEnemies = useGameStore((state) => state.moveEnemies);
+  const spawnEnemy = useGameStore((state) => state.spawnEnemy);
+  const obstacles = useGameStore((state) => state.obstacles);
+  
+  const spawnTimerRef = useRef(0);
+
+  useFrame((state, delta) => {
+    // 1. Move Enemies
+    moveEnemies(delta);
+
+    // 2. Spawn Logic (every 3.8 seconds - 30% faster than 5.0s)
+    spawnTimerRef.current += delta;
+    if (spawnTimerRef.current > 3.8) {
+        spawnEnemy();
+        spawnTimerRef.current = 0;
+    }
+  });
+
   return (
     <>
       {/* Lights */}
@@ -18,17 +40,27 @@ export const GameScene = () => {
       {/* Game Objects */}
       <Player />
       <Ground />
-
-      {/* Environment Props */}
-      <Tree position={[-3, 0, -3]} />
-      <Tree position={[5, 0, 2]} />
-      <Tree position={[-5, 0, 4]} />
-      <Tree position={[2, 0, -6]} />
-      <Tree position={[8, 0, -2]} />
       
-      <Rock position={[2, 0.25, 3]} />
-      <Rock position={[-2, 0.4, 6]} scale={1.5} />
-      <Rock position={[6, 0.25, -5]} />
+      {/* Enemies */}
+      {enemies.map(enemy => (
+          <Enemy key={enemy.id} data={enemy} />
+      ))}
+
+      {/* Environment Obstacles */}
+      {obstacles.map(obs => {
+          const pos: [number, number, number] = [obs.position.x, obs.position.y, obs.position.z];
+          switch(obs.type) {
+              case 'tree': return <Tree key={obs.id} position={pos} />;
+              case 'rock': return <Rock key={obs.id} position={pos} scale={obs.radius * 2} />;
+              case 'house': return <House key={obs.id} position={pos} />;
+              case 'wagon': return <Wagon key={obs.id} position={pos} rotation={obs.rotation || 0} />;
+              case 'log': return <Log key={obs.id} position={pos} rotation={obs.rotation || 0} />;
+              case 'grass': return <Grass key={obs.id} position={pos} />;
+              case 'dirtpath': return <DirtPath key={obs.id} position={pos} rotation={obs.rotation || 0} size={obs.size} />;
+              case 'pond': return <Pond key={obs.id} position={pos} radius={obs.radius} />;
+              default: return null;
+          }
+      })}
 
       {/* Optional: Orbit controls for debugging, though Player handles camera */}
       {/* <OrbitControls /> */} 

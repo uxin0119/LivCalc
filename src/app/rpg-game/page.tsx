@@ -7,7 +7,7 @@ import { KeyboardController } from '../common/components/rpg/KeyboardController'
 
 export default function RPGPage() {
   return (
-    <div className="w-full h-screen relative bg-black touch-none">
+    <div className="fixed inset-0 z-50 bg-black touch-none overflow-hidden">
       <KeyboardController />
       
       {/* UI Overlay */}
