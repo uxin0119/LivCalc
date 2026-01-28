@@ -94,7 +94,8 @@ export const Player = () => {
 
     if (targetEnemyPos && isWithinAttackRange) {
         // Face the target
-        groupRef.current.lookAt(targetEnemyPos.x, groupRef.current.position.y, targetEnemyPos.z);
+        const target = targetEnemyPos as Vector3;
+        groupRef.current.lookAt(target.x, groupRef.current.position.y, target.z);
     } else if (moveVec.length() > 0) {
         // Face movement direction
         const angle = Math.atan2(moveX, moveZ);
