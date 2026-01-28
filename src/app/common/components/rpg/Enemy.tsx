@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh } from 'three';
+import { Mesh, Group } from 'three';
 import { EnemyData, useGameStore } from './gameStore';
 
 interface EnemyProps {
