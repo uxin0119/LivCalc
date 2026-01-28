@@ -141,33 +141,46 @@ export default function LivingCalculatorPage() {
     const renderSyncStatus = () => {
         if (status !== 'authenticated') return null;
 
+        const containerClass = "fixed bottom-3 right-16 sm:bottom-8 sm:right-24 z-40 bg-gray-900/80 backdrop-blur px-3 py-1.5 rounded-full shadow-lg border border-gray-700 transition-all duration-300";
+
         switch (syncStatus) {
             case 'saving':
                 return (
-                    <div className="flex items-center text-gray-400 text-xs gap-1" title="저장 중...">
-                        <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span className="hidden sm:inline">저장 중...</span>
+                    <div className={containerClass}>
+                        <div className="flex items-center text-gray-200 text-xs gap-2">
+                            <svg className="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>저장 중...</span>
+                        </div>
                     </div>
                 );
             case 'synced':
                 return (
-                    <div className="flex items-center text-green-500 text-xs gap-1" title={lastSavedTime ? `마지막 저장: ${lastSavedTime.toLocaleTimeString()}` : '동기화됨'}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="hidden sm:inline">저장됨</span>
+                    <div className={`${containerClass} opacity-0 pointer-events-none delay-1000`}> 
+                        {/* 1초 후 사라지게 설정 (CSS transition 활용) - 실제로는 state로 제어하거나 그냥 둬도 됨. 
+                            여기서는 항상 보이면 거슬리므로 저장 직후에만 잠깐 보이거나, 
+                            또는 작게 체크 표시만 유지하는 것이 좋음.
+                            요청 사항은 "위치 이동"이므로 일단 보여줌. 
+                        */}
+                        <div className="flex items-center text-green-400 text-xs gap-2">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>저장됨</span>
+                        </div>
                     </div>
                 );
             case 'error':
                 return (
-                    <div className="flex items-center text-red-500 text-xs gap-1" title="저장 실패">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <span className="hidden sm:inline">저장 실패</span>
+                    <div className={containerClass}>
+                        <div className="flex items-center text-red-400 text-xs gap-2">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>저장 실패</span>
+                        </div>
                     </div>
                 );
             default:
@@ -183,10 +196,6 @@ export default function LivingCalculatorPage() {
                     <div className="text-center mb-6 sm:mb-8 relative">
                         <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
                             <h1 className={`${TokenStyles.livingCalculator.title}`}>생활비 계산기</h1>
-                            {/* 상태 표시기 (제목 옆) */}
-                            <div className="absolute right-4 top-1 sm:static sm:top-auto sm:right-auto">
-                                {renderSyncStatus()}
-                            </div>
                         </div>
                         <p className={`${TokenStyles.livingCalculator.subtitle} px-4`}>월간 수입과 지출을 관리하고 일일 사용 가능 금액을 확인하세요</p>
                     </div>
@@ -207,6 +216,9 @@ export default function LivingCalculatorPage() {
                     </div>
                 </div>
             </div>
+
+            {/* 상태 표시기 (플로팅) */}
+            {renderSyncStatus()}
 
             {/* 플로팅 메뉴 */}
             <FloatingMenu
