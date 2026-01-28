@@ -45,8 +45,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
          */
         if (isOpen) {
             document.addEventListener('keydown', handleEsc);
-            // 모달이 열릴 때 body 스크롤 방지
+            // 모달이 열릴 때 body 스크롤 방지 및 스크롤바 너비 보정
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
             document.body.style.overflow = 'hidden';
+            if (scrollbarWidth > 0) {
+                document.body.style.paddingRight = `${scrollbarWidth}px`;
+            }
         }
 
         /**
@@ -55,6 +59,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
         return () => {
             document.removeEventListener('keydown', handleEsc);
             document.body.style.overflow = 'unset';
+            document.body.style.paddingRight = '';
         };
     }, [isOpen, onClose]);
 
