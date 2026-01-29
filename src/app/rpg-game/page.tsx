@@ -10,8 +10,6 @@ import { useGameStore } from '../common/components/rpg/gameStore';
 
 export default function RPGPage() {
   const toggleInventory = useGameStore((state) => state.toggleInventory);
-  const weaponType = useGameStore((state) => state.weaponType);
-  const toggleWeapon = useGameStore((state) => state.toggleWeapon);
 
   return (
     <div className="fixed inset-0 z-50 bg-black touch-none overflow-hidden">
@@ -23,16 +21,6 @@ export default function RPGPage() {
         <h1 className="text-2xl font-bold mb-2">Mini RPG Prototype</h1>
         <p className="text-sm opacity-80 hidden lg:block">Use WASD or Arrow Keys to move. Press 'I' for Bag.</p>
         <p className="text-sm opacity-80 lg:hidden">Use Joystick to move.</p>
-      </div>
-
-      {/* Weapon Toggle Button */}
-      <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-          <button 
-            onClick={toggleWeapon}
-            className="bg-gray-900/80 hover:bg-gray-800 text-white px-6 py-3 rounded-xl border border-gray-700 shadow-xl transition-all active:scale-95 font-bold flex items-center gap-2"
-          >
-            {weaponType === 'melee' ? '⚔️ Switch to Ranged' : '🪄 Switch to Melee'}
-          </button>
       </div>
 
       {/* Inventory Toggle Button (Mobile & Desktop) */}

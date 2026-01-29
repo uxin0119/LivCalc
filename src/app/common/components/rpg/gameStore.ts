@@ -76,9 +76,8 @@ interface GameState {
 
   loots: Loot[];
   checkLootCollection: () => void;
+  cleanupLoots: () => void;
 
-  weaponType: 'melee' | 'ranged';
-  toggleWeapon: () => void;
   projectiles: Projectile[];
   fireProjectile: (pos: Position, dir: { x: number; z: number }) => void;
   moveProjectiles: (delta: number) => void;
@@ -389,22 +388,32 @@ export const useGameStore = create<GameState>((set, get) => ({
           inventory: newInventory
       };
   }),
+  
+  cleanupLoots: () => set((state) => {
+      const now = Date.now();
+      const MAX_LOOT_AGE = 60000; 
+      
+      const hasOldLoot = state.loots.some(l => now - l.createdAt > MAX_LOOT_AGE);
+      if (!hasOldLoot) return {};
 
-  // Weapon & Projectiles
-  weaponType: 'melee',
-  toggleWeapon: () => set((state) => ({ weaponType: state.weaponType === 'melee' ? 'ranged' : 'melee' })),
+      return {
+          loots: state.loots.filter(l => now - l.createdAt <= MAX_LOOT_AGE)
+      };
+  }),
+
+  // Projectiles (Gun System)
   projectiles: [],
   fireProjectile: (pos, dir) => set((state) => ({
       projectiles: [...state.projectiles, {
           id: `proj-${Date.now()}`,
           position: { ...pos },
           direction: { ...dir },
-          speed: 15.0,
-          damage: state.attackDamage * 0.8 
+          speed: 40.0, // Fast bullet speed
+          damage: state.attackDamage 
       }]
   })),
   moveProjectiles: (delta) => set((state) => {
-      const MAX_RANGE = 20.0;
+      const MAX_RANGE = 30.0;
       const COLLISION_DIST = 0.8;
       const newProjectiles: Projectile[] = [];
       const deadProjIds = new Set<string>();

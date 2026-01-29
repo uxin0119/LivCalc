@@ -17,20 +17,19 @@ export const Player = () => {
   const isAttacking = useGameStore((state) => state.isAttacking);
   const damageEnemy = useGameStore((state) => state.damageEnemy);
   const attackDamage = useGameStore((state) => state.attackDamage);
-  const weaponType = useGameStore((state) => state.weaponType);
   const fireProjectile = useGameStore((state) => state.fireProjectile);
   const setTargetEnemyId = useGameStore((state) => state.setTargetEnemyId);
   const { camera } = useThree();
 
-  // Attack animation state
-  const attackAnimRef = useRef(0);
-  const hasDealtDamageRef = useRef(false);
+  // Attack animation state (Recoil)
+  const recoilAnimRef = useRef(0);
+  const isFiringRef = useRef(false);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    const enemies = useGameStore.getState().enemies; // Read fresh state directly
-    const obstacles = useGameStore.getState().obstacles; // Read fresh state directly
+    const enemies = useGameStore.getState().enemies; 
+    const obstacles = useGameStore.getState().obstacles; 
 
     const moveX = moveVectorState.x;
     const moveZ = moveVectorState.z;
@@ -52,9 +51,9 @@ export const Player = () => {
         }
     });
 
-    // Ranged vs Melee Detection & Attack Range
-    const lockRange = weaponType === 'ranged' ? 15.0 : DETECTION_RANGE;
-    const currentAttackRange = weaponType === 'ranged' ? 12.0 : ATTACK_RANGE;
+    // Ranged Detection Range (Always Ranged now)
+    const lockRange = 15.0;
+    const attackRange = 12.0;
 
     if (nearestEnemyDist < lockRange && nearestEnemyId) {
         setTargetEnemyId(nearestEnemyId);
@@ -63,31 +62,47 @@ export const Player = () => {
         nearestEnemyId = null; 
     }
 
-    // 2. Movement Logic with Collision Detection
+    // 2. Movement Logic (Sliding Collision)
     const moveVec = new Vector3(moveX, 0, moveZ);
     if (moveVec.length() > 0) {
       if (moveVec.length() > 1) moveVec.normalize();
       moveVec.multiplyScalar(SPEED * delta);
-      const nextPos = playerPos.clone().add(moveVec);
-      
-      let canMove = true;
+
+      // Try X axis movement
+      const nextPosX = playerPos.clone().add(new Vector3(moveVec.x, 0, 0));
+      let canMoveX = true;
       for (const obs of obstacles) {
           if (!obs.collidable) continue;
-          const dx = nextPos.x - obs.position.x;
-          const dz = nextPos.z - obs.position.z;
+          const dx = nextPosX.x - obs.position.x;
+          const dz = nextPosX.z - obs.position.z;
           const dist = Math.sqrt(dx*dx + dz*dz);
           if (dist < (PLAYER_RADIUS + obs.radius)) {
-              canMove = false;
+              canMoveX = false;
               break;
           }
       }
-      if (canMove) groupRef.current.position.add(moveVec);
+      if (canMoveX) groupRef.current.position.x += moveVec.x;
+
+      // Try Z axis movement (using potentially updated X)
+      const nextPosZ = groupRef.current.position.clone().add(new Vector3(0, 0, moveVec.z));
+      let canMoveZ = true;
+      for (const obs of obstacles) {
+          if (!obs.collidable) continue;
+          const dx = nextPosZ.x - obs.position.x;
+          const dz = nextPosZ.z - obs.position.z;
+          const dist = Math.sqrt(dx*dx + dz*dz);
+          if (dist < (PLAYER_RADIUS + obs.radius)) {
+              canMoveZ = false;
+              break;
+          }
+      }
+      if (canMoveZ) groupRef.current.position.z += moveVec.z;
     }
 
     groupRef.current.position.y = 0.5;
 
-    // 3. Rotation Logic (Face Target if exists AND within currentAttackRange, else face movement)
-    const isWithinAttackRange = nearestEnemyId !== null && nearestEnemyDist < currentAttackRange;
+    // 3. Rotation Logic
+    const isWithinAttackRange = nearestEnemyId !== null && nearestEnemyDist < attackRange;
 
     if (targetEnemyPos && isWithinAttackRange) {
         const target = targetEnemyPos as Vector3;
@@ -97,83 +112,56 @@ export const Player = () => {
         groupRef.current.rotation.y = angle; 
     }
 
-    // Update global position state
-    setPlayerPosition({
-      x: groupRef.current.position.x,
-      y: groupRef.current.position.y,
-      z: groupRef.current.position.z,
-    });
-
     // Camera follow logic
+    const currentPos = groupRef.current.position;
     const cameraOffset = new Vector3(0, 10, 10);
-    const targetCameraPos = playerPos.clone().add(cameraOffset);
-    camera.position.lerp(targetCameraPos, 0.1);
-    camera.lookAt(playerPos);
+    const targetCameraPos = currentPos.clone().add(cameraOffset);
+    camera.position.lerp(targetCameraPos, 0.2);
+    camera.lookAt(currentPos);
 
     // 4. Auto-Attack Logic
-    const shouldAttack = nearestEnemyId !== null && nearestEnemyDist < currentAttackRange;
+    const shouldAttack = nearestEnemyId !== null && nearestEnemyDist < attackRange;
 
     if (shouldAttack && !isAttacking) {
         setIsAttacking(true);
-        hasDealtDamageRef.current = false;
-    } else if (!shouldAttack && isAttacking && attackAnimRef.current === 0) {
+    } else if (!shouldAttack && isAttacking && recoilAnimRef.current === 0) {
          setIsAttacking(false);
     }
 
-    // Weapon Animation & Damage Dealing
+    // Gun Animation & Firing
     if (weaponRef.current) {
         if (isAttacking) {
-            // Animation Phase: 0 -> PI
-            // Phase 1: Swing Down (0 -> PI/2) - Fast
-            // Phase 2: Return (PI/2 -> PI) - Slow
+            // Recoil Animation: Slide back and kick up
+            recoilAnimRef.current += delta * 20; // Speed
             
-            const isSwingDown = attackAnimRef.current < Math.PI / 2;
-            const speed = isSwingDown ? 25 : 5; // Fast down, slow up
-            
-            attackAnimRef.current += delta * speed;
-
-            // Swing Logic
-            // Swing from rest (PI/3) to hit (PI/3 + range)
-            const range = Math.PI / 2.5; // Narrower range
-            const swing = Math.sin(attackAnimRef.current) * range;
-            weaponRef.current.rotation.x = Math.PI / 3 + swing;
-
-            // Deal damage at the peak (approx PI/2)
-            if (!hasDealtDamageRef.current && attackAnimRef.current >= Math.PI / 2) {
-                if (weaponType === 'melee') {
-                    enemies.forEach(enemy => {
-                        if (enemy.isDead) return;
-                        const enemyPos = new Vector3(enemy.position.x, enemy.position.y, enemy.position.z);
-                        const dist = groupRef.current!.position.distanceTo(enemyPos);
-                        
-                        if (dist <= ATTACK_RANGE) {
-                            damageEnemy(enemy.id, attackDamage);
-                        }
-                    });
-                } else {
-                    // Ranged: Fire Projectile
-                    // Calculate forward direction based on player rotation
-                    const dir = new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion);
-                    fireProjectile(
-                        { x: playerPos.x, y: 1.0, z: playerPos.z },
-                        { x: dir.x, z: dir.z }
-                    );
-                }
-                hasDealtDamageRef.current = true;
+            // Fire at start of recoil
+            if (!isFiringRef.current && recoilAnimRef.current < 0.5) {
+                const dir = new Vector3(0, 0, 1).applyQuaternion(groupRef.current!.quaternion);
+                fireProjectile(
+                    { x: playerPos.x, y: 1.0, z: playerPos.z },
+                    { x: dir.x, z: dir.z }
+                );
+                isFiringRef.current = true;
             }
 
-            // Reset animation at end of cycle
-             if (attackAnimRef.current > Math.PI) {
-                 attackAnimRef.current = 0;
-                 hasDealtDamageRef.current = false; 
-                 // Note: We don't set isAttacking=false here, loop continues if enemy near.
-                 // But logic above handles auto-attack stop.
-             }
-
+            // Animation Curve: 0 -> 1 -> 0
+            // Simple recoil: z position moves back, rotation x kicks up
+            if (recoilAnimRef.current < Math.PI) {
+                const kick = Math.sin(recoilAnimRef.current);
+                weaponRef.current.position.z = 0.3 - kick * 0.2; // Slide back (base 0.3)
+                weaponRef.current.rotation.x = -kick * 0.2; // Kick up (negative x is up in this orientation?)
+                // If Gun points +Z. +X rotation tips it down. -X tips it up.
+            } else {
+                // Reset
+                recoilAnimRef.current = 0;
+                isFiringRef.current = false;
+            }
         } else {
-            // Reset to resting position: leaning forward
-            weaponRef.current.rotation.x = Math.PI / 3; 
-            attackAnimRef.current = 0;
+            // Idle
+            weaponRef.current.position.z = 0.3;
+            weaponRef.current.rotation.x = 0;
+            recoilAnimRef.current = 0;
+            isFiringRef.current = false;
         }
     }
   });
@@ -201,32 +189,27 @@ export const Player = () => {
         <meshStandardMaterial color="black" />
       </mesh>
 
-      {/* Weapon Arm / Weapon Group */}
-      <group position={[0.3, 0.8, 0.1]} ref={weaponRef} rotation={[Math.PI / 3, 0, 0]}>
-          {weaponType === 'melee' ? (
-              <>
-                <mesh position={[0, 0.4, 0]} castShadow>
-                    <boxGeometry args={[0.1, 0.8, 0.1]} />
-                    <meshStandardMaterial color="#8d6e63" />
-                </mesh>
-                <mesh position={[0, 0.9, 0]} castShadow>
-                    <boxGeometry args={[0.2, 0.4, 0.2]} />
-                    <meshStandardMaterial color="silver" />
-                </mesh>
-              </>
-          ) : (
-              <>
-                {/* Magic Staff */}
-                <mesh position={[0, 0.6, 0]} castShadow>
-                    <cylinderGeometry args={[0.05, 0.05, 1.2]} />
-                    <meshStandardMaterial color="#5d4037" />
-                </mesh>
-                <mesh position={[0, 1.2, 0]} castShadow>
-                    <sphereGeometry args={[0.15, 8, 8]} />
-                    <meshStandardMaterial color="#ffeb3b" emissive="#fbc02d" emissiveIntensity={2} />
-                </mesh>
-              </>
-          )}
+      {/* Gun Weapon Group */}
+      <group position={[0.2, 0.8, 0.3]} ref={weaponRef}>
+          <group rotation={[Math.PI / 2, 0, 0]}> 
+            {/* Rotate internal parts to point Z forward (Cylinder default is Y up) */}
+            
+            {/* Stock */}
+            <mesh position={[0, -0.2, 0]} castShadow>
+                <boxGeometry args={[0.08, 0.4, 0.15]} />
+                <meshStandardMaterial color="#5d4037" />
+            </mesh>
+            {/* Barrel */}
+            <mesh position={[0, 0.4, 0]} castShadow>
+                <cylinderGeometry args={[0.04, 0.05, 1.0]} />
+                <meshStandardMaterial color="#37474f" />
+            </mesh>
+            {/* Magazine */}
+            <mesh position={[0, 0.1, 0.15]} rotation={[0.2, 0, 0]} castShadow>
+                <boxGeometry args={[0.06, 0.3, 0.1]} />
+                <meshStandardMaterial color="#212121" />
+            </mesh>
+          </group>
       </group>
     </group>
   );

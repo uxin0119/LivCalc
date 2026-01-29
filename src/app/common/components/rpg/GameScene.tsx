@@ -14,6 +14,7 @@ export const GameScene = () => {
   const obstacles = useGameStore((state) => state.obstacles);
   const loots = useGameStore((state) => state.loots);
   const checkLootCollection = useGameStore((state) => state.checkLootCollection);
+  const cleanupLoots = useGameStore((state) => state.cleanupLoots);
   const projectiles = useGameStore((state) => state.projectiles);
   const moveProjectiles = useGameStore((state) => state.moveProjectiles);
   
@@ -30,8 +31,9 @@ export const GameScene = () => {
         spawnTimerRef.current = 0;
     }
 
-    // 3. Loot Collection
+    // 3. Loot Collection & Cleanup
     checkLootCollection();
+    cleanupLoots();
 
     // 4. Projectiles
     moveProjectiles(delta);
