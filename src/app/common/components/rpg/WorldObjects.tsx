@@ -102,13 +102,16 @@ export const Wagon = ({ position, rotation = 0 }: { position: [number, number, n
 };
 
 export const Grass = ({ position }: { position: [number, number, number] }) => {
+    const rotation1 = React.useMemo(() => Math.random() * Math.PI, []);
+    const rotation2 = React.useMemo(() => Math.random() * Math.PI, []);
+
     return (
         <group position={position}>
-            <mesh position={[0, 0.25, 0]} rotation={[0, Math.random() * Math.PI, 0]}>
+            <mesh position={[0, 0.25, 0]} rotation={[0, rotation1, 0]}>
                 <coneGeometry args={[0.2, 0.5, 3]} />
                 <meshStandardMaterial color="#8bc34a" flatShading />
             </mesh>
-             <mesh position={[0.1, 0.2, 0.1]} rotation={[0, Math.random() * Math.PI, 0]}>
+             <mesh position={[0.1, 0.2, 0.1]} rotation={[0, rotation2, 0]}>
                 <coneGeometry args={[0.15, 0.4, 3]} />
                 <meshStandardMaterial color="#7cb342" flatShading />
             </mesh>

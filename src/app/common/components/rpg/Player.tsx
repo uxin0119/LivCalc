@@ -19,6 +19,7 @@ export const Player = () => {
   const attackDamage = useGameStore((state) => state.attackDamage);
   const fireProjectile = useGameStore((state) => state.fireProjectile);
   const setTargetEnemyId = useGameStore((state) => state.setTargetEnemyId);
+  const collectLoot = useGameStore((state) => state.collectLoot);
   const { camera } = useThree();
 
   // Attack animation state (Recoil)
@@ -30,10 +31,20 @@ export const Player = () => {
 
     const enemies = useGameStore.getState().enemies; 
     const obstacles = useGameStore.getState().obstacles; 
+    const loots = useGameStore.getState().loots;
 
     const moveX = moveVectorState.x;
     const moveZ = moveVectorState.z;
     const playerPos = groupRef.current.position;
+
+    // 0. Loot Pickup
+    const PICKUP_RADIUS = 2.0;
+    loots.forEach(loot => {
+        const dist = playerPos.distanceTo(new Vector3(loot.position.x, loot.position.y, loot.position.z));
+        if (dist < PICKUP_RADIUS) {
+            collectLoot(loot.id);
+        }
+    });
 
     // 1. Find Nearest Enemy (Target Locking)
     let nearestEnemyId: string | null = null;

@@ -20,10 +20,19 @@ export interface EnemyData {
   rotation: number; // Y-axis rotation in radians
 }
 
+export interface InventoryItem {
+  id: string;
+  type: 'potion' | 'sword' | 'wood' | 'stone' | 'armor' | 'gun';
+  name: string;
+  count: number;
+  description: string;
+}
+
 export interface Loot {
   id: string;
   type: InventoryItem['type'];
   position: Position;
+  createdAt: number; // For cleanup
 }
 
 export interface Projectile {
@@ -54,6 +63,7 @@ interface GameState {
   isAttacking: boolean;
   setIsAttacking: (isAttacking: boolean) => void;
   attackDamage: number;
+  maxHp: number; // Player Max HP
 
   enemies: EnemyData[];
   setEnemies: (enemies: EnemyData[]) => void;
@@ -74,10 +84,20 @@ interface GameState {
   addItem: (type: InventoryItem['type'], count: number) => void;
   useItem: (itemId: string) => void;
 
+  // Equipment
+  equipment: {
+      weapon: InventoryItem | null;
+      armor: InventoryItem | null;
+  };
+  equipItem: (item: InventoryItem) => void;
+  unequipItem: (slot: 'weapon' | 'armor') => void;
+
+  // Loot
   loots: Loot[];
-  checkLootCollection: () => void;
+  collectLoot: (lootId: string) => void;
   cleanupLoots: () => void;
 
+  // Projectiles
   projectiles: Projectile[];
   fireProjectile: (pos: Position, dir: { x: number; z: number }) => void;
   moveProjectiles: (delta: number) => void;
@@ -93,6 +113,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   isAttacking: false,
   setIsAttacking: (isAttacking) => set({ isAttacking }),
   attackDamage: 10,
+  maxHp: 100,
 
   enemies: [
     { 
@@ -115,7 +136,8 @@ export const useGameStore = create<GameState>((set, get) => ({
               lootToAdd = {
                   id: `loot-${Date.now()}-${Math.random()}`,
                   type: randomType,
-                  position: { ...enemy.position }
+                  position: { ...enemy.position },
+                  createdAt: Date.now()
               };
           }
       }
@@ -314,8 +336,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Inventory Logic
   inventory: [
       { id: 'item-1', type: 'potion', name: 'Health Potion', count: 5, description: 'Restores 50 HP' },
-      { id: 'item-2', type: 'sword', name: 'Rusty Sword', count: 1, description: 'Basic weapon' },
-      { id: 'item-3', type: 'wood', name: 'Log', count: 3, description: 'Crafting material' },
+      { id: 'item-2', type: 'gun', name: 'Assault Rifle', count: 1, description: 'Rapid fire ranged weapon. +5 DMG.' },
+      { id: 'item-3', type: 'armor', name: 'Leather Armor', count: 1, description: 'Basic protection. +50 HP.' },
       { id: 'item-4', type: 'stone', name: 'Pebble', count: 10, description: 'Useless stone' },
   ],
   isInventoryOpen: false,
@@ -342,53 +364,128 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
   }),
   
-  useItem: (itemId) => set((state) => {
-      // Placeholder for item usage logic
-      console.log(`Used item: ${itemId}`);
-      return state;
+  useItem: (itemId) => {
+      const state = get();
+      const item = state.inventory.find(i => i.id === itemId);
+      if (item) {
+          if (item.type === 'gun' || item.type === 'sword' || item.type === 'armor') {
+              state.equipItem(item);
+          } else {
+              console.log(`Used item: ${itemId}`);
+          }
+      }
+  },
+
+  // Equipment Logic
+  equipment: { weapon: null, armor: null },
+  equipItem: (item) => set((state) => {
+      const slot = (item.type === 'gun' || item.type === 'sword') ? 'weapon' : 'armor';
+      const currentEquip = state.equipment[slot];
+      
+      // Removing item from inventory logic
+      // Note: If count > 1, we should decrement. 
+      // But for simplicity in this demo, assume we take 1 unit.
+      let newInventory = [...state.inventory];
+      const itemIdx = newInventory.findIndex(i => i.id === item.id);
+      
+      if (itemIdx === -1) return {}; // Item not found
+
+      if (newInventory[itemIdx].count > 1) {
+          newInventory[itemIdx] = { ...newInventory[itemIdx], count: newInventory[itemIdx].count - 1 };
+      } else {
+          newInventory.splice(itemIdx, 1);
+      }
+
+      // If equipping stacked item, we create a copy with count 1
+      const itemToEquip = { ...item, count: 1 };
+
+      if (currentEquip) {
+          // Return current equipment to inventory
+          // Ideally check if stackable, but simplified: just push
+          newInventory.push(currentEquip);
+      }
+
+      const newEquipment = { ...state.equipment, [slot]: itemToEquip };
+      
+      // Calc Stats
+      let newDamage = 10;
+      let newMaxHp = 100;
+      
+      if (newEquipment.weapon) {
+          if (newEquipment.weapon.type === 'gun') newDamage += 5;
+          if (newEquipment.weapon.type === 'sword') newDamage += 3;
+      }
+      if (newEquipment.armor) {
+          newMaxHp += 50;
+      }
+
+      return {
+          inventory: newInventory,
+          equipment: newEquipment,
+          attackDamage: newDamage,
+          maxHp: newMaxHp
+      };
+  }),
+  unequipItem: (slot) => set((state) => {
+      const item = state.equipment[slot];
+      if (!item) return {};
+
+      const newEquipment = { ...state.equipment, [slot]: null };
+      const newInventory = [...state.inventory, item];
+
+      // Calc Stats
+      let newDamage = 10;
+      let newMaxHp = 100;
+      
+      if (newEquipment.weapon) {
+          if (newEquipment.weapon.type === 'gun') newDamage += 5;
+          if (newEquipment.weapon.type === 'sword') newDamage += 3;
+      }
+      if (newEquipment.armor) {
+          newMaxHp += 50;
+      }
+
+      return {
+          equipment: newEquipment,
+          inventory: newInventory,
+          attackDamage: newDamage,
+          maxHp: newMaxHp
+      };
   }),
 
   // Loot Logic
   loots: [],
-  checkLootCollection: () => set((state) => {
-      const PICKUP_RADIUS = 1.0;
-      const collectedLoots = state.loots.filter(loot => {
-          const dx = state.playerPosition.x - loot.position.x;
-          const dz = state.playerPosition.z - loot.position.z;
-          const dist = Math.sqrt(dx*dx + dz*dz);
-          return dist < PICKUP_RADIUS;
-      });
+  collectLoot: (lootId: string) => set((state) => {
+      const lootIndex = state.loots.findIndex(l => l.id === lootId);
+      if (lootIndex === -1) return {};
 
-      if (collectedLoots.length === 0) return {};
-
+      const loot = state.loots[lootIndex];
       let newInventory = [...state.inventory];
       
-      collectedLoots.forEach(loot => {
-          const existingIdx = newInventory.findIndex(i => i.type === loot.type);
-          if (existingIdx >= 0) {
-              newInventory[existingIdx] = { 
-                  ...newInventory[existingIdx], 
-                  count: newInventory[existingIdx].count + 1 
-              };
-          } else {
-              newInventory.push({
-                  id: `item-${Date.now()}-${Math.random()}`,
-                  type: loot.type,
-                  name: loot.type.charAt(0).toUpperCase() + loot.type.slice(1),
-                  count: 1,
-                  description: 'Found on ground'
-              });
-          }
-      });
+      const existingIdx = newInventory.findIndex(i => i.type === loot.type);
+      if (existingIdx >= 0) {
+          newInventory[existingIdx] = { 
+              ...newInventory[existingIdx], 
+              count: newInventory[existingIdx].count + 1 
+          };
+      } else {
+          newInventory.push({
+              id: `item-${Date.now()}-${Math.random()}`,
+              type: loot.type,
+              name: loot.type.charAt(0).toUpperCase() + loot.type.slice(1),
+              count: 1,
+              description: 'Found on ground'
+          });
+      }
 
-      const remainingLoots = state.loots.filter(loot => !collectedLoots.includes(loot));
+      const remainingLoots = [...state.loots];
+      remainingLoots.splice(lootIndex, 1);
       
       return {
           loots: remainingLoots,
           inventory: newInventory
       };
   }),
-  
   cleanupLoots: () => set((state) => {
       const now = Date.now();
       const MAX_LOOT_AGE = 60000; 
@@ -401,14 +498,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       };
   }),
 
-  // Projectiles (Gun System)
+  // Projectiles
   projectiles: [],
   fireProjectile: (pos, dir) => set((state) => ({
       projectiles: [...state.projectiles, {
           id: `proj-${Date.now()}`,
           position: { ...pos },
           direction: { ...dir },
-          speed: 40.0, // Fast bullet speed
+          speed: 40.0,
           damage: state.attackDamage 
       }]
   })),

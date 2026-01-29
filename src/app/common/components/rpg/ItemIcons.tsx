@@ -35,6 +35,21 @@ export const IconStone = ({ className }: { className?: string }) => (
   </svg>
 );
 
+export const IconArmor = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L4 4V11C4 16.5 7.5 21.5 12 22C16.5 21.5 20 16.5 20 11V4L12 2Z" fill="#5c6bc0" stroke="white" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M12 2V22" stroke="white" strokeWidth="2" opacity="0.3"/>
+    <path d="M4 11H20" stroke="white" strokeWidth="2" opacity="0.3"/>
+  </svg>
+);
+
+export const IconGun = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 14H8L10 12H20V8H10L8 6H4V10H2V14Z" fill="#424242" stroke="white" strokeWidth="2" strokeLinejoin="round"/>
+    <rect x="5" y="14" width="3" height="4" fill="#5d4037" stroke="white" strokeWidth="2"/>
+  </svg>
+);
+
 export const IconBag = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
     <path d="M6 8V6C6 4.34315 7.34315 3 9 3H15C16.6569 3 18 4.34315 18 6V8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
@@ -49,6 +64,8 @@ export const ItemIcon = ({ type, className }: { type: string, className?: string
         case 'sword': return <IconSword className={className} />;
         case 'wood': return <IconWood className={className} />;
         case 'stone': return <IconStone className={className} />;
+        case 'armor': return <IconArmor className={className} />;
+        case 'gun': return <IconGun className={className} />;
         default: return null;
     }
 };

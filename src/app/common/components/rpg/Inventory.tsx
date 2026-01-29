@@ -7,6 +7,12 @@ export const Inventory = () => {
   const toggleInventory = useGameStore((state) => state.toggleInventory);
   const inventory = useGameStore((state) => state.inventory);
   const useItem = useGameStore((state) => state.useItem);
+  
+  // Equipment State
+  const equipment = useGameStore((state) => state.equipment);
+  const unequipItem = useGameStore((state) => state.unequipItem);
+  const attackDamage = useGameStore((state) => state.attackDamage);
+  const maxHp = useGameStore((state) => state.maxHp);
 
   // Keyboard listener for 'I'
   useEffect(() => {
@@ -40,12 +46,63 @@ export const Inventory = () => {
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 🎒 Inventory
             </h2>
+            <div className="flex gap-3 text-xs text-gray-400 font-mono">
+                <span className="flex items-center gap-1"><span className="text-red-400">⚔️</span> {attackDamage}</span>
+                <span className="flex items-center gap-1"><span className="text-green-400">❤️</span> {maxHp}</span>
+            </div>
             <button 
                 onClick={toggleInventory}
                 className="text-gray-400 hover:text-white transition-colors text-xl font-bold px-2"
             >
                 ✕
             </button>
+          </div>
+
+          {/* Equipment Slots */}
+          <div className="flex gap-4 justify-center bg-black/40 p-3 rounded-lg border border-gray-800">
+              {/* Weapon Slot */}
+              <div className="flex flex-col items-center gap-1">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Weapon</span>
+                  <div 
+                    className={`w-14 h-14 rounded-lg border-2 ${equipment.weapon ? 'border-yellow-600 bg-gray-800 cursor-pointer' : 'border-dashed border-gray-700 bg-black/20'} flex items-center justify-center transition-all relative group`}
+                    onClick={() => equipment.weapon && unequipItem('weapon')}
+                  >
+                      {equipment.weapon ? (
+                          <ItemIcon type={equipment.weapon.type} className="w-10 h-10 drop-shadow-md" />
+                      ) : (
+                          <span className="text-gray-700 text-xl">⚔️</span>
+                      )}
+                      
+                      {equipment.weapon && (
+                        <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 w-32 bg-gray-900 border border-yellow-700 rounded p-2 shadow-xl">
+                            <p className="font-bold text-xs text-yellow-500">{equipment.weapon.name}</p>
+                            <p className="text-[10px] text-gray-400">Click to unequip</p>
+                        </div>
+                      )}
+                  </div>
+              </div>
+
+              {/* Armor Slot */}
+              <div className="flex flex-col items-center gap-1">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Armor</span>
+                  <div 
+                    className={`w-14 h-14 rounded-lg border-2 ${equipment.armor ? 'border-blue-600 bg-gray-800 cursor-pointer' : 'border-dashed border-gray-700 bg-black/20'} flex items-center justify-center transition-all relative group`}
+                    onClick={() => equipment.armor && unequipItem('armor')}
+                  >
+                      {equipment.armor ? (
+                          <ItemIcon type={equipment.armor.type} className="w-10 h-10 drop-shadow-md" />
+                      ) : (
+                          <span className="text-gray-700 text-xl">🛡️</span>
+                      )}
+
+                      {equipment.armor && (
+                        <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 w-32 bg-gray-900 border border-blue-700 rounded p-2 shadow-xl">
+                            <p className="font-bold text-xs text-blue-400">{equipment.armor.name}</p>
+                            <p className="text-[10px] text-gray-400">Click to unequip</p>
+                        </div>
+                      )}
+                  </div>
+              </div>
           </div>
 
           {/* Grid */}
