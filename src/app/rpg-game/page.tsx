@@ -4,18 +4,32 @@ import { Canvas } from '@react-three/fiber';
 import { GameScene } from '../common/components/rpg/GameScene';
 import { Joystick } from '../common/components/rpg/Joystick';
 import { KeyboardController } from '../common/components/rpg/KeyboardController';
+import { Inventory } from '../common/components/rpg/Inventory';
+import { IconBag } from '../common/components/rpg/ItemIcons';
+import { useGameStore } from '../common/components/rpg/gameStore';
 
 export default function RPGPage() {
+  const toggleInventory = useGameStore((state) => state.toggleInventory);
+
   return (
     <div className="fixed inset-0 z-50 bg-black touch-none overflow-hidden">
       <KeyboardController />
+      <Inventory />
       
       {/* UI Overlay */}
       <div className="absolute top-4 left-4 z-10 text-white pointer-events-none select-none">
         <h1 className="text-2xl font-bold mb-2">Mini RPG Prototype</h1>
-        <p className="text-sm opacity-80 hidden lg:block">Use WASD or Arrow Keys to move.</p>
+        <p className="text-sm opacity-80 hidden lg:block">Use WASD or Arrow Keys to move. Press 'I' for Bag.</p>
         <p className="text-sm opacity-80 lg:hidden">Use Joystick to move.</p>
       </div>
+
+      {/* Inventory Toggle Button (Mobile & Desktop) */}
+      <button 
+        onClick={toggleInventory}
+        className="absolute top-4 right-4 z-20 bg-gray-900/80 hover:bg-gray-800 text-white p-3 rounded-full border border-gray-700 shadow-xl transition-all active:scale-95"
+      >
+        <IconBag className="w-8 h-8" />
+      </button>
 
       <Joystick />
 

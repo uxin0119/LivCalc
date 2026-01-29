@@ -128,32 +128,41 @@ export const Player = () => {
     // Weapon Animation & Damage Dealing
     if (weaponRef.current) {
         if (isAttacking) {
-            attackAnimRef.current += delta * 7.5; // Animation speed reduced by 50% (was 15)
-            // Swing from 0 to PI
-            const swing = Math.sin(attackAnimRef.current) * 2;
-            // Swing on X axis from a forward lean
+            // Animation Phase: 0 -> PI
+            // Phase 1: Swing Down (0 -> PI/2) - Fast
+            // Phase 2: Return (PI/2 -> PI) - Slow
+            
+            const isSwingDown = attackAnimRef.current < Math.PI / 2;
+            const speed = isSwingDown ? 25 : 5; // Fast down, slow up
+            
+            attackAnimRef.current += delta * speed;
+
+            // Swing Logic
+            // Swing from rest (PI/3) to hit (PI/3 + range)
+            const range = Math.PI / 2.5; // Narrower range
+            const swing = Math.sin(attackAnimRef.current) * range;
             weaponRef.current.rotation.x = Math.PI / 3 + swing;
 
-            // Deal damage at the peak of the swing (Area of Effect)
-            if (!hasDealtDamageRef.current && swing > 1.2) {
+            // Deal damage at the peak (approx PI/2)
+            if (!hasDealtDamageRef.current && attackAnimRef.current >= Math.PI / 2) {
                 enemies.forEach(enemy => {
                     if (enemy.isDead) return;
                     const enemyPos = new Vector3(enemy.position.x, enemy.position.y, enemy.position.z);
                     const dist = groupRef.current!.position.distanceTo(enemyPos);
                     
-                    // AOE Range check (Basic slash range)
                     if (dist <= ATTACK_RANGE) {
                         damageEnemy(enemy.id, attackDamage);
-                        console.log(`AOE Hit: ${enemy.id} for ${attackDamage}`);
                     }
                 });
                 hasDealtDamageRef.current = true;
             }
 
-            // Reset animation
+            // Reset animation at end of cycle
              if (attackAnimRef.current > Math.PI) {
                  attackAnimRef.current = 0;
                  hasDealtDamageRef.current = false; 
+                 // Note: We don't set isAttacking=false here, loop continues if enemy near.
+                 // But logic above handles auto-attack stop.
              }
 
         } else {
