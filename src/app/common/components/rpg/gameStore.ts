@@ -26,6 +26,14 @@ export interface Loot {
   position: Position;
 }
 
+export interface Projectile {
+  id: string;
+  position: Position;
+  direction: { x: number; z: number };
+  speed: number;
+  damage: number;
+}
+
 export interface Obstacle {
   id: string;
   type: 'tree' | 'rock' | 'house' | 'log' | 'wagon' | 'grass' | 'dirtpath' | 'pond';
@@ -68,6 +76,12 @@ interface GameState {
 
   loots: Loot[];
   checkLootCollection: () => void;
+
+  weaponType: 'melee' | 'ranged';
+  toggleWeapon: () => void;
+  projectiles: Projectile[];
+  fireProjectile: (pos: Position, dir: { x: number; z: number }) => void;
+  moveProjectiles: (delta: number) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -374,5 +388,57 @@ export const useGameStore = create<GameState>((set, get) => ({
           loots: remainingLoots,
           inventory: newInventory
       };
+  }),
+
+  // Weapon & Projectiles
+  weaponType: 'melee',
+  toggleWeapon: () => set((state) => ({ weaponType: state.weaponType === 'melee' ? 'ranged' : 'melee' })),
+  projectiles: [],
+  fireProjectile: (pos, dir) => set((state) => ({
+      projectiles: [...state.projectiles, {
+          id: `proj-${Date.now()}`,
+          position: { ...pos },
+          direction: { ...dir },
+          speed: 15.0,
+          damage: state.attackDamage * 0.8 
+      }]
+  })),
+  moveProjectiles: (delta) => set((state) => {
+      const MAX_RANGE = 20.0;
+      const COLLISION_DIST = 0.8;
+      const newProjectiles: Projectile[] = [];
+      const deadProjIds = new Set<string>();
+      
+      state.projectiles.forEach(p => {
+          const newPos = {
+              x: p.position.x + p.direction.x * p.speed * delta,
+              y: p.position.y,
+              z: p.position.z + p.direction.z * p.speed * delta
+          };
+
+          let hitEnemyId: string | null = null;
+          state.enemies.forEach(enemy => {
+              if (enemy.isDead || deadProjIds.has(p.id)) return;
+              const dx = newPos.x - enemy.position.x;
+              const dz = newPos.z - enemy.position.z;
+              if (Math.sqrt(dx*dx + dz*dz) < COLLISION_DIST) {
+                  hitEnemyId = enemy.id;
+              }
+          });
+
+          if (hitEnemyId) {
+              get().damageEnemy(hitEnemyId, p.damage);
+              deadProjIds.add(p.id);
+          } else {
+              const distFromPlayer = Math.sqrt(
+                  Math.pow(newPos.x - state.playerPosition.x, 2) + 
+                  Math.pow(newPos.z - state.playerPosition.z, 2)
+              );
+              if (distFromPlayer < MAX_RANGE) {
+                  newProjectiles.push({ ...p, position: newPos });
+              }
+          }
+      });
+      return { projectiles: newProjectiles };
   })
 }));

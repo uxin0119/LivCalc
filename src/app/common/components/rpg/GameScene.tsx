@@ -4,6 +4,7 @@ import { Player } from './Player';
 import { Ground, Tree, Rock, House, Wagon, Log, Grass, DirtPath, Pond } from './WorldObjects';
 import { Enemy } from './Enemy';
 import { LootItem } from './LootItem';
+import { Projectile } from './Projectile';
 import { useGameStore } from './gameStore';
 
 export const GameScene = () => {
@@ -13,6 +14,8 @@ export const GameScene = () => {
   const obstacles = useGameStore((state) => state.obstacles);
   const loots = useGameStore((state) => state.loots);
   const checkLootCollection = useGameStore((state) => state.checkLootCollection);
+  const projectiles = useGameStore((state) => state.projectiles);
+  const moveProjectiles = useGameStore((state) => state.moveProjectiles);
   
   const spawnTimerRef = useRef(0);
 
@@ -29,6 +32,9 @@ export const GameScene = () => {
 
     // 3. Loot Collection
     checkLootCollection();
+
+    // 4. Projectiles
+    moveProjectiles(delta);
   });
 
   return (
@@ -55,6 +61,11 @@ export const GameScene = () => {
       {/* Loot Drops */}
       {loots.map(loot => (
           <LootItem key={loot.id} loot={loot} />
+      ))}
+
+      {/* Projectiles */}
+      {projectiles.map(proj => (
+          <Projectile key={proj.id} data={proj} />
       ))}
 
       {/* Environment Obstacles */}
