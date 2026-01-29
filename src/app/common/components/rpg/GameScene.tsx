@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Player } from './Player';
 import { Ground, Tree, Rock, House, Wagon, Log, Grass, DirtPath, Pond } from './WorldObjects';
 import { Enemy } from './Enemy';
+import { LootItem } from './LootItem';
 import { useGameStore } from './gameStore';
 
 export const GameScene = () => {
@@ -10,6 +11,8 @@ export const GameScene = () => {
   const moveEnemies = useGameStore((state) => state.moveEnemies);
   const spawnEnemy = useGameStore((state) => state.spawnEnemy);
   const obstacles = useGameStore((state) => state.obstacles);
+  const loots = useGameStore((state) => state.loots);
+  const checkLootCollection = useGameStore((state) => state.checkLootCollection);
   
   const spawnTimerRef = useRef(0);
 
@@ -23,6 +26,9 @@ export const GameScene = () => {
         spawnEnemy();
         spawnTimerRef.current = 0;
     }
+
+    // 3. Loot Collection
+    checkLootCollection();
   });
 
   return (
@@ -44,6 +50,11 @@ export const GameScene = () => {
       {/* Enemies */}
       {enemies.map(enemy => (
           <Enemy key={enemy.id} data={enemy} />
+      ))}
+
+      {/* Loot Drops */}
+      {loots.map(loot => (
+          <LootItem key={loot.id} loot={loot} />
       ))}
 
       {/* Environment Obstacles */}

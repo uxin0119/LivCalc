@@ -14,8 +14,6 @@ export const Player = () => {
   const moveVectorState = useGameStore((state) => state.moveVector);
   const setPlayerPosition = useGameStore((state) => state.setPlayerPosition);
   const setIsAttacking = useGameStore((state) => state.setIsAttacking);
-  const enemies = useGameStore((state) => state.enemies);
-  const obstacles = useGameStore((state) => state.obstacles);
   const isAttacking = useGameStore((state) => state.isAttacking);
   const damageEnemy = useGameStore((state) => state.damageEnemy);
   const attackDamage = useGameStore((state) => state.attackDamage);
@@ -28,6 +26,9 @@ export const Player = () => {
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
+
+    const enemies = useGameStore.getState().enemies; // Read fresh state directly
+    const obstacles = useGameStore.getState().obstacles; // Read fresh state directly
 
     const moveX = moveVectorState.x;
     const moveZ = moveVectorState.z;

@@ -20,6 +20,12 @@ export interface EnemyData {
   rotation: number; // Y-axis rotation in radians
 }
 
+export interface Loot {
+  id: string;
+  type: InventoryItem['type'];
+  position: Position;
+}
+
 export interface Obstacle {
   id: string;
   type: 'tree' | 'rock' | 'house' | 'log' | 'wagon' | 'grass' | 'dirtpath' | 'pond';
@@ -59,6 +65,9 @@ interface GameState {
   toggleInventory: () => void;
   addItem: (type: InventoryItem['type'], count: number) => void;
   useItem: (itemId: string) => void;
+
+  loots: Loot[];
+  checkLootCollection: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -79,15 +88,34 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   ],
   setEnemies: (enemies) => set({ enemies }),
-  damageEnemy: (id, damage) => set((state) => ({
-    enemies: state.enemies.map(enemy => {
+  damageEnemy: (id, damage) => set((state) => {
+    let lootToAdd: Loot | null = null;
+    const newEnemies = state.enemies.map(enemy => {
       if (enemy.id !== id) return enemy;
       const newHp = Math.max(0, enemy.hp - damage);
-      // Aggro on hit: Switch to chase immediately if alive
+      
+      // On Death: 50% chance to drop loot
+      if (newHp === 0 && !enemy.isDead) {
+          if (Math.random() > 0.5) {
+              const types: InventoryItem['type'][] = ['potion', 'wood', 'stone'];
+              const randomType = types[Math.floor(Math.random() * types.length)];
+              lootToAdd = {
+                  id: `loot-${Date.now()}-${Math.random()}`,
+                  type: randomType,
+                  position: { ...enemy.position }
+              };
+          }
+      }
+
       const newState = newHp > 0 ? 'chase' : enemy.aiState;
       return { ...enemy, hp: newHp, isDead: newHp === 0, hitStun: 0.5, aiState: newState };
-    })
-  })),
+    });
+
+    return { 
+        enemies: newEnemies,
+        loots: lootToAdd ? [...state.loots, lootToAdd] : state.loots
+    };
+  }),
 
   targetEnemyId: null,
   setTargetEnemyId: (id) => set({ targetEnemyId: id }),
@@ -305,5 +333,46 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Placeholder for item usage logic
       console.log(`Used item: ${itemId}`);
       return state;
+  }),
+
+  // Loot Logic
+  loots: [],
+  checkLootCollection: () => set((state) => {
+      const PICKUP_RADIUS = 1.0;
+      const collectedLoots = state.loots.filter(loot => {
+          const dx = state.playerPosition.x - loot.position.x;
+          const dz = state.playerPosition.z - loot.position.z;
+          const dist = Math.sqrt(dx*dx + dz*dz);
+          return dist < PICKUP_RADIUS;
+      });
+
+      if (collectedLoots.length === 0) return {};
+
+      let newInventory = [...state.inventory];
+      
+      collectedLoots.forEach(loot => {
+          const existingIdx = newInventory.findIndex(i => i.type === loot.type);
+          if (existingIdx >= 0) {
+              newInventory[existingIdx] = { 
+                  ...newInventory[existingIdx], 
+                  count: newInventory[existingIdx].count + 1 
+              };
+          } else {
+              newInventory.push({
+                  id: `item-${Date.now()}-${Math.random()}`,
+                  type: loot.type,
+                  name: loot.type.charAt(0).toUpperCase() + loot.type.slice(1),
+                  count: 1,
+                  description: 'Found on ground'
+              });
+          }
+      });
+
+      const remainingLoots = state.loots.filter(loot => !collectedLoots.includes(loot));
+      
+      return {
+          loots: remainingLoots,
+          inventory: newInventory
+      };
   })
 }));
