@@ -20,11 +20,22 @@ export const Player = () => {
   const fireProjectile = useGameStore((state) => state.fireProjectile);
   const setTargetEnemyId = useGameStore((state) => state.setTargetEnemyId);
   const collectLoot = useGameStore((state) => state.collectLoot);
+  const enterMap = useGameStore((state) => state.enterMap);
+  const setNearbyPortalId = useGameStore((state) => state.setNearbyPortalId);
+  const currentMap = useGameStore((state) => state.currentMap);
+  const storePlayerPosition = useGameStore((state) => state.playerPosition); // Read initial/reset pos
   const { camera } = useThree();
 
   // Attack animation state (Recoil)
   const recoilAnimRef = useRef(0);
   const isFiringRef = useRef(false);
+
+  // Sync position on map change
+  useEffect(() => {
+      if (groupRef.current) {
+          groupRef.current.position.set(storePlayerPosition.x, storePlayerPosition.y, storePlayerPosition.z);
+      }
+  }, [currentMap]); // Only trigger on map change (or explicitly if we want to force reset)
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -32,21 +43,34 @@ export const Player = () => {
     const enemies = useGameStore.getState().enemies; 
     const obstacles = useGameStore.getState().obstacles; 
     const loots = useGameStore.getState().loots;
+    const portals = useGameStore.getState().portals;
 
     const moveX = moveVectorState.x;
     const moveZ = moveVectorState.z;
     const playerPos = groupRef.current.position;
 
-    // 0. Loot Pickup
-    const PICKUP_RADIUS = 2.0;
+    // 0. Loot & Portal Collision
+    const INTERACTION_RADIUS = 2.0;
+    
+    // Loot
     loots.forEach(loot => {
         const dist = playerPos.distanceTo(new Vector3(loot.position.x, loot.position.y, loot.position.z));
-        if (dist < PICKUP_RADIUS) {
+        if (dist < INTERACTION_RADIUS) {
             collectLoot(loot.id);
         }
     });
 
-    // 1. Find Nearest Enemy (Target Locking)
+    // Portals
+    let foundPortalId: string | null = null;
+    portals.forEach(portal => {
+        const dist = playerPos.distanceTo(new Vector3(portal.position.x, portal.position.y, portal.position.z));
+        if (dist < INTERACTION_RADIUS) {
+            foundPortalId = portal.id;
+        }
+    });
+    setNearbyPortalId(foundPortalId);
+
+    // Ranged Detection Range (Always Ranged now)
     let nearestEnemyId: string | null = null;
     let nearestEnemyDist = Infinity;
     let targetEnemyPos: Vector3 | null = null;

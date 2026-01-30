@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { MAP_DATA } from './MapData';
 
 export interface Position {
   x: number;
@@ -53,6 +54,13 @@ export interface Obstacle {
   size?: [number, number]; // For rectangular objects like paths
 }
 
+export interface PortalData {
+    id: string;
+    position: Position;
+    targetMap: 'village' | 'wild';
+    targetSpawn: Position;
+}
+
 interface GameState {
   moveVector: { x: number; z: number };
   setMoveVector: (vector: { x: number; z: number }) => void;
@@ -72,10 +80,20 @@ interface GameState {
   targetEnemyId: string | null;
   setTargetEnemyId: (id: string | null) => void;
   
+  // Interaction
+  nearbyPortalId: string | null;
+  setNearbyPortalId: (id: string | null) => void;
+
   spawnEnemy: () => void;
   moveEnemies: (delta: number) => void;
 
+  // Map & Environment
+  currentMap: 'village' | 'wild';
+  currentMapName: string;
+  mapTransitionTrigger: number; // Increment to trigger UI effect
+  enterMap: (mapId: 'village' | 'wild', spawnPos: Position) => void;
   obstacles: Obstacle[];
+  portals: PortalData[];
   
   // Inventory
   inventory: InventoryItem[];
@@ -107,7 +125,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   moveVector: { x: 0, z: 0 },
   setMoveVector: (vector) => set({ moveVector: vector }),
 
-  playerPosition: { x: 0, y: 0, z: 0 },
+  // Initialize in Village
+  playerPosition: { ...MAP_DATA.village.spawnPoint }, 
   setPlayerPosition: (pos) => set({ playerPosition: pos }),
 
   isAttacking: false,
@@ -115,12 +134,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   attackDamage: 10,
   maxHp: 100,
 
-  enemies: [
-    { 
-        id: 'enemy-1', position: { x: 5, y: 0, z: 5 }, hp: 100, maxHp: 100, isDead: false, hitStun: 0,
-        aiState: 'idle', roamTarget: null, idleTimer: 2.0, rotation: 0 
-    }
-  ],
+  enemies: [], // No enemies in village initially
   setEnemies: (enemies) => set({ enemies }),
   damageEnemy: (id, damage) => set((state) => {
     let lootToAdd: Loot | null = null;
@@ -155,28 +169,45 @@ export const useGameStore = create<GameState>((set, get) => ({
   targetEnemyId: null,
   setTargetEnemyId: (id) => set({ targetEnemyId: id }),
 
+  nearbyPortalId: null,
+  setNearbyPortalId: (id) => set({ nearbyPortalId: id }),
+
   spawnEnemy: () => set((state) => {
+    // Only spawn in Wild
+    if (state.currentMap !== 'wild') return {};
+
     const MAX_ENEMIES = 40;
-    const activeEnemies = state.enemies.filter(e => !e.isDead);
+    const BATCH_SIZE = 3;
+    let activeEnemies = state.enemies.filter(e => !e.isDead);
+    
     if (activeEnemies.length >= MAX_ENEMIES) return {};
 
-    // Random position on map (approx -50 to 50)
-    const x = (Math.random() - 0.5) * 80; 
-    const z = (Math.random() - 0.5) * 80;
+    const newEnemies: EnemyData[] = [];
     
-    const newEnemy: EnemyData = {
-        id: `enemy-${Date.now()}`,
-        position: { x, y: 0, z },
-        hp: 100,
-        maxHp: 100,
-        isDead: false,
-        hitStun: 0,
-        aiState: 'idle',
-        roamTarget: null,
-        idleTimer: 1.0,
-        rotation: Math.random() * Math.PI * 2
-    };
-    return { enemies: [...state.enemies, newEnemy] };
+    for (let i = 0; i < BATCH_SIZE; i++) {
+        if (activeEnemies.length + newEnemies.length >= MAX_ENEMIES) break;
+
+        // Spawn around player (15m ~ 30m distance)
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 15 + Math.random() * 15;
+        const x = state.playerPosition.x + Math.sin(angle) * dist;
+        const z = state.playerPosition.z + Math.cos(angle) * dist;
+        
+        newEnemies.push({
+            id: `enemy-${Date.now()}-${i}`,
+            position: { x, y: 0, z },
+            hp: 100,
+            maxHp: 100,
+            isDead: false,
+            hitStun: 0,
+            aiState: 'idle',
+            roamTarget: null,
+            idleTimer: 1.0,
+            rotation: Math.random() * Math.PI * 2
+        });
+    }
+    
+    return { enemies: [...state.enemies, ...newEnemies] };
   }),
 
   moveEnemies: (delta: number) => set((state) => {
@@ -300,38 +331,27 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { enemies: newEnemies };
   }),
 
-  obstacles: [
-      // Trees
-      { id: 'tree-1', type: 'tree', position: { x: -3, y: 0, z: -3 }, radius: 0.5, collidable: true },
-      { id: 'tree-2', type: 'tree', position: { x: 5, y: 0, z: 2 }, radius: 0.5, collidable: true },
-      { id: 'tree-3', type: 'tree', position: { x: -5, y: 0, z: 4 }, radius: 0.5, collidable: true },
-      { id: 'tree-4', type: 'tree', position: { x: 2, y: 0, z: -6 }, radius: 0.5, collidable: true },
-      
-      // Rocks
-      { id: 'rock-1', type: 'rock', position: { x: 2, y: 0.25, z: 3 }, radius: 0.5, collidable: true },
-      { id: 'rock-2', type: 'rock', position: { x: -2, y: 0.4, z: 6 }, radius: 0.7, collidable: true },
-      
-      // Houses
-      { id: 'house-1', type: 'house', position: { x: -8, y: 0, z: -8 }, radius: 2.0, collidable: true },
-      
-      // Wagons
-      { id: 'wagon-1', type: 'wagon', position: { x: 8, y: 0, z: 8 }, radius: 1.2, collidable: true, rotation: Math.PI / 4 },
-      
-      // Logs
-      { id: 'log-1', type: 'log', position: { x: 4, y: 0, z: -4 }, radius: 0.5, collidable: true, rotation: Math.PI / 2 },
-      
-      // Grass (Non-collidable)
-      { id: 'grass-1', type: 'grass', position: { x: 1, y: 0, z: 1 }, radius: 0, collidable: false },
-      { id: 'grass-2', type: 'grass', position: { x: 1.5, y: 0, z: 1.2 }, radius: 0, collidable: false },
-      { id: 'grass-3', type: 'grass', position: { x: -1, y: 0, z: -1 }, radius: 0, collidable: false },
-
-      // Ponds (Collidable - Water)
-      { id: 'pond-1', type: 'pond', position: { x: -6, y: 0, z: 6 }, radius: 2.5, collidable: true },
-
-      // Dirt Paths (Non-collidable)
-      { id: 'path-1', type: 'dirtpath', position: { x: 0, y: 0, z: 0 }, radius: 0, collidable: false, size: [2, 10] },
-      { id: 'path-2', type: 'dirtpath', position: { x: 0, y: 0, z: 0 }, radius: 0, collidable: false, size: [10, 2], rotation: Math.PI / 2 },
-  ],
+  // Map Logic
+  currentMap: 'village',
+  currentMapName: MAP_DATA.village.name,
+  mapTransitionTrigger: 0,
+  obstacles: MAP_DATA.village.obstacles,
+  portals: MAP_DATA.village.portals,
+  
+  enterMap: (mapId, spawnPos) => set((state) => {
+      const mapConfig = MAP_DATA[mapId];
+      return {
+          currentMap: mapId,
+          currentMapName: mapConfig.name,
+          mapTransitionTrigger: state.mapTransitionTrigger + 1,
+          obstacles: mapConfig.obstacles,
+          portals: mapConfig.portals,
+          playerPosition: { ...spawnPos }, // Use provided spawnPos
+          enemies: [], // Clear enemies
+          loots: [], // Clear floor loot
+          projectiles: [] // Clear flying bullets
+      };
+  }),
 
   // Inventory Logic
   inventory: [
@@ -382,32 +402,19 @@ export const useGameStore = create<GameState>((set, get) => ({
       const slot = (item.type === 'gun' || item.type === 'sword') ? 'weapon' : 'armor';
       const currentEquip = state.equipment[slot];
       
-      // Removing item from inventory logic
-      // Note: If count > 1, we should decrement. 
-      // But for simplicity in this demo, assume we take 1 unit.
-      let newInventory = [...state.inventory];
-      const itemIdx = newInventory.findIndex(i => i.id === item.id);
+      let newInventory = state.inventory.filter(i => i.id !== item.id);
       
-      if (itemIdx === -1) return {}; // Item not found
-
-      if (newInventory[itemIdx].count > 1) {
-          newInventory[itemIdx] = { ...newInventory[itemIdx], count: newInventory[itemIdx].count - 1 };
-      } else {
-          newInventory.splice(itemIdx, 1);
+      if (item.count > 1) {
+          newInventory = state.inventory.map(i => i.id === item.id ? { ...i, count: i.count - 1 } : i);
+          item = { ...item, count: 1 };
       }
 
-      // If equipping stacked item, we create a copy with count 1
-      const itemToEquip = { ...item, count: 1 };
-
       if (currentEquip) {
-          // Return current equipment to inventory
-          // Ideally check if stackable, but simplified: just push
           newInventory.push(currentEquip);
       }
 
-      const newEquipment = { ...state.equipment, [slot]: itemToEquip };
+      const newEquipment = { ...state.equipment, [slot]: item };
       
-      // Calc Stats
       let newDamage = 10;
       let newMaxHp = 100;
       
@@ -433,7 +440,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       const newEquipment = { ...state.equipment, [slot]: null };
       const newInventory = [...state.inventory, item];
 
-      // Calc Stats
       let newDamage = 10;
       let newMaxHp = 100;
       

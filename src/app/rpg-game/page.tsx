@@ -6,15 +6,31 @@ import { Joystick } from '../common/components/rpg/Joystick';
 import { KeyboardController } from '../common/components/rpg/KeyboardController';
 import { Inventory } from '../common/components/rpg/Inventory';
 import { IconBag } from '../common/components/rpg/ItemIcons';
+import { MapNameDisplay } from '../common/components/rpg/MapNameDisplay';
 import { useGameStore } from '../common/components/rpg/gameStore';
 
 export default function RPGPage() {
   const toggleInventory = useGameStore((state) => state.toggleInventory);
+  
+  // Interaction State
+  const nearbyPortalId = useGameStore((state) => state.nearbyPortalId);
+  const portals = useGameStore((state) => state.portals);
+  const enterMap = useGameStore((state) => state.enterMap);
+
+  const handleInteraction = () => {
+      if (nearbyPortalId) {
+          const portal = portals.find(p => p.id === nearbyPortalId);
+          if (portal) {
+              enterMap(portal.targetMap, portal.targetSpawn);
+          }
+      }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black touch-none overflow-hidden">
       <KeyboardController />
       <Inventory />
+      <MapNameDisplay />
       
       {/* UI Overlay */}
       <div className="absolute top-4 left-4 z-10 text-white pointer-events-none select-none">
@@ -22,6 +38,16 @@ export default function RPGPage() {
         <p className="text-sm opacity-80 hidden lg:block">Use WASD or Arrow Keys to move. Press 'I' for Bag.</p>
         <p className="text-sm opacity-80 lg:hidden">Use Joystick to move.</p>
       </div>
+
+      {/* Interaction Button */}
+      {nearbyPortalId && (
+          <button 
+            onClick={handleInteraction}
+            className="absolute bottom-24 right-4 z-30 bg-blue-600/90 hover:bg-blue-500 text-white p-4 rounded-full border-2 border-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.6)] animate-pulse-glow transition-all active:scale-95"
+          >
+            <span className="text-2xl">🚪</span>
+          </button>
+      )}
 
       {/* Inventory Toggle Button (Mobile & Desktop) */}
       <button 

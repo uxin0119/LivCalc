@@ -3,85 +3,93 @@ import { useGameStore } from './gameStore';
 
 export const Joystick = () => {
   const setMoveVector = useGameStore((state) => state.setMoveVector);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [active, setActive] = useState(false);
+  
+  // State for joystick visual
+  const [isVisible, setIsVisible] = useState(false);
+  const [basePos, setBasePos] = useState({ x: 0, y: 0 });
+  const [handlePos, setHandlePos] = useState({ x: 0, y: 0 });
+  
+  const activePointerId = useRef<number | null>(null);
   
   // Configuration
-  const maxRadius = 40; // Max distance for the knob
+  const maxRadius = 40; 
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // Only accept left click or touch
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    
+    // Ignore if clicking on UI elements (buttons)
+    // Simple check: if target is a button, ignore.
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+
     e.currentTarget.setPointerCapture(e.pointerId);
-    setActive(true);
-    updatePosition(e.clientX, e.clientY);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!active) return;
-    updatePosition(e.clientX, e.clientY);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    setActive(false);
-    setPosition({ x: 0, y: 0 });
+    activePointerId.current = e.pointerId;
+    
+    setIsVisible(true);
+    setBasePos({ x: e.clientX, y: e.clientY });
+    setHandlePos({ x: 0, y: 0 });
     setMoveVector({ x: 0, z: 0 });
   };
 
-  const updatePosition = (clientX: number, clientY: number) => {
-    if (!containerRef.current) return;
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    let dx = clientX - centerX;
-    let dy = clientY - centerY;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (activePointerId.current !== e.pointerId) return;
+
+    const dx = e.clientX - basePos.x;
+    const dy = e.clientY - basePos.y;
     
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // Clamp to maxRadius
+    let limitedDx = dx;
+    let limitedDy = dy;
+
     if (distance > maxRadius) {
       const angle = Math.atan2(dy, dx);
-      dx = Math.cos(angle) * maxRadius;
-      dy = Math.sin(angle) * maxRadius;
+      limitedDx = Math.cos(angle) * maxRadius;
+      limitedDy = Math.sin(angle) * maxRadius;
     }
     
-    setPosition({ x: dx, y: dy });
+    setHandlePos({ x: limitedDx, y: limitedDy });
     
-    // Update store with normalized vector (-1 to 1)
-    // In 3D space, screen Y (up/down) maps to Z (forward/backward)
-    // Screen Up (negative dy) -> 3D Forward (negative z)
-    // Screen Down (positive dy) -> 3D Backward (positive z)
-    // Screen Left (negative dx) -> 3D Left (negative x)
-    // Screen Right (positive dx) -> 3D Right (positive x)
-    
-    // Note: We map dy to z directly.
+    // Normalize vector for movement
+    // Screen Y is inverted in 3D Z? No, Screen Down (+Y) -> Back (+Z)
     setMoveVector({ 
       x: dx / maxRadius, 
       z: dy / maxRadius 
     });
   };
 
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (activePointerId.current === e.pointerId) {
+        activePointerId.current = null;
+        setIsVisible(false);
+        setHandlePos({ x: 0, y: 0 });
+        setMoveVector({ x: 0, z: 0 });
+    }
+  };
+
   return (
     <div 
-      className="absolute bottom-10 right-10 z-50 select-none touch-none"
+      className="absolute inset-0 z-40 touch-none select-none"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
-      <div 
-        ref={containerRef}
-        className="relative w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center touch-none"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      >
+      {isVisible && (
         <div 
-          className="w-12 h-12 rounded-full bg-white shadow-lg absolute pointer-events-none transition-transform duration-75"
-          style={{ 
-            transform: `translate(${position.x}px, ${position.y}px)`,
-            opacity: active ? 1 : 0.8
-          }}
-        />
-      </div>
+            className="absolute w-24 h-24 rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/20 flex items-center justify-center pointer-events-none transition-opacity duration-75"
+            style={{ 
+                left: basePos.x - 48, // Center the 96px div
+                top: basePos.y - 48,
+            }}
+        >
+            <div 
+                className="w-10 h-10 rounded-full bg-white/80 shadow-lg absolute"
+                style={{ 
+                    transform: `translate(${handlePos.x}px, ${handlePos.y}px)`,
+                }}
+            />
+        </div>
+      )}
     </div>
   );
 };

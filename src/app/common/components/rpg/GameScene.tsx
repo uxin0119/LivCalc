@@ -5,6 +5,7 @@ import { Ground, Tree, Rock, House, Wagon, Log, Grass, DirtPath, Pond } from './
 import { Enemy } from './Enemy';
 import { LootItem } from './LootItem';
 import { Projectile } from './Projectile';
+import { Portal } from './Portal';
 import { useGameStore } from './gameStore';
 
 export const GameScene = () => {
@@ -12,7 +13,9 @@ export const GameScene = () => {
   const moveEnemies = useGameStore((state) => state.moveEnemies);
   const spawnEnemy = useGameStore((state) => state.spawnEnemy);
   const obstacles = useGameStore((state) => state.obstacles);
+  const portals = useGameStore((state) => state.portals);
   const loots = useGameStore((state) => state.loots);
+  const checkLootCollection = useGameStore((state) => state.checkLootCollection);
   const cleanupLoots = useGameStore((state) => state.cleanupLoots);
   const projectiles = useGameStore((state) => state.projectiles);
   const moveProjectiles = useGameStore((state) => state.moveProjectiles);
@@ -30,7 +33,7 @@ export const GameScene = () => {
         spawnTimerRef.current = 0;
     }
 
-    // 3. Loot Cleanup
+    // 3. Loot Cleanup (Pickup is handled in Player)
     cleanupLoots();
 
     // 4. Projectiles
@@ -42,11 +45,16 @@ export const GameScene = () => {
       {/* Lights */}
       <ambientLight intensity={0.5} />
       <directionalLight 
-        position={[10, 20, 10]} 
+        position={[20, 30, 20]} 
         intensity={1} 
         castShadow 
-        shadow-mapSize-width={1024} 
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={2048} 
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
+        shadow-camera-far={100}
       />
 
       {/* Game Objects */}
@@ -66,6 +74,11 @@ export const GameScene = () => {
       {/* Projectiles */}
       {projectiles.map(proj => (
           <Projectile key={proj.id} data={proj} />
+      ))}
+
+      {/* Portals */}
+      {portals.map(portal => (
+          <Portal key={portal.id} data={portal} />
       ))}
 
       {/* Environment Obstacles */}
