@@ -81,18 +81,23 @@ export default function LivingCalculatorPage() {
         // 2초 후 저장 실행
         autoSaveTimerRef.current = setTimeout(async () => {
             try {
+                // 클라이언트의 현재 날짜 (시간대 문제 방지)
+                const today = new Date();
+                const clientDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
                 const response = await fetch('/api/calculator/save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
-                        data: items, 
+                    body: JSON.stringify({
+                        data: items,
                         categories: categories,
                         summary: {
                             dailyAvailable,
                             monthTotal
-                        }
+                        },
+                        clientDate
                     }),
                 });
 

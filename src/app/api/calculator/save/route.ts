@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, categories, summary } = await request.json();
+    const { data, categories, summary, clientDate } = await request.json();
 
     if (!data) {
       return NextResponse.json(
@@ -54,16 +54,19 @@ export async function POST(request: Request) {
     // 2. 로그 저장 (History Log - 오늘 날짜 기록 업데이트 또는 생성)
     if (summary) {
       const { dailyAvailable, monthTotal } = summary;
-      
+
+      // 클라이언트에서 보내준 날짜 사용 (시간대 문제 방지), 없으면 서버 날짜 사용
+      const logDate = clientDate || new Date().toISOString().split('T')[0];
+
       await query(
-        `INSERT INTO calculator_logs (user_id, log_date, daily_available, total_expense) 
-         VALUES ($1, CURRENT_DATE, $2, $3)
-         ON CONFLICT (user_id, log_date) 
-         DO UPDATE SET 
+        `INSERT INTO calculator_logs (user_id, log_date, daily_available, total_expense)
+         VALUES ($1, $2::date, $3, $4)
+         ON CONFLICT (user_id, log_date)
+         DO UPDATE SET
             daily_available = EXCLUDED.daily_available,
             total_expense = EXCLUDED.total_expense,
             created_at = NOW()`,
-        [session.user.id, dailyAvailable || 0, monthTotal || 0]
+        [session.user.id, logDate, dailyAvailable || 0, monthTotal || 0]
       );
 
       // 3. 오래된 로그 삭제 (설정된 기간 적용)

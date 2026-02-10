@@ -21,8 +21,6 @@ const getDaysLeftInMonth = (): number => {
     return daysInCurrentMonth - currentDay;
 };
 
-const DAYS_IN_MONTH = getCurrentMonthDays();
-const DAYS_LEFT = getDaysLeftInMonth();
 
 interface CalcState {
   items: CalcData[];
@@ -244,6 +242,10 @@ const useCalcStore = create<CalcState>((set, get) => ({
     let newMonthTotal = 0;
     let fixedTotal = 0;
 
+    // 매번 호출 시 현재 날짜 기준으로 계산 (날짜가 바뀌면 자동 반영)
+    const daysLeft = getDaysLeftInMonth();
+    const daysInMonth = getCurrentMonthDays();
+
     // 환율을 적용한 계산을 위해 각 아이템을 원화로 환산 (활성화된 아이템만)
     for (const item of items) {
         // 비활성화된 아이템은 계산에서 제외
@@ -252,7 +254,7 @@ const useCalcStore = create<CalcState>((set, get) => ({
         }
 
         const krwValue = await ExchangeService.convertToKRW(item.value, item.currency || 'KRW');
-        
+
         if (item.type === "plus") {
             newMonthTotal += krwValue;
             if (item.category === "fixed") {
@@ -268,8 +270,8 @@ const useCalcStore = create<CalcState>((set, get) => ({
 
     set({
         monthTotal: Math.round(newMonthTotal),
-        dailyAvailable: Math.floor(newMonthTotal / DAYS_LEFT),
-        fixedTotal: Math.floor(fixedTotal / DAYS_IN_MONTH)
+        dailyAvailable: Math.floor(newMonthTotal / daysLeft),
+        fixedTotal: Math.floor(fixedTotal / daysInMonth)
     });
   },
 

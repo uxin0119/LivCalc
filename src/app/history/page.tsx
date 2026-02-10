@@ -176,6 +176,23 @@ export default function HistoryPage() {
 
     const getLogForDate = (dateStr: string) => logs.find(log => log.date === dateStr);
 
+    // 일일 사용금액 계산 (전날 월 잔액 - 오늘 월 잔액)
+    const getDailySpending = (dateStr: string): number | null => {
+        const currentLog = getLogForDate(dateStr);
+        if (!currentLog) return null;
+
+        // 전날 날짜 계산
+        const currentDate = new Date(dateStr);
+        currentDate.setDate(currentDate.getDate() - 1);
+        const prevDateStr = currentDate.toISOString().split('T')[0];
+        const prevLog = getLogForDate(prevDateStr);
+
+        if (!prevLog) return null;
+
+        // 전날 월 잔액 - 오늘 월 잔액 = 일일 사용금액
+        return prevLog.total_expense - currentLog.total_expense;
+    };
+
     if (status === 'unauthenticated') {
         return (
             <div className="flex items-center justify-center min-h-[60vh] text-gray-400">
@@ -238,6 +255,7 @@ export default function HistoryPage() {
                         }
 
                         const log = getLogForDate(item.dateStr);
+                        const dailySpending = getDailySpending(item.dateStr);
                         const isToday = item.dateStr === new Date().toISOString().split('T')[0];
                         const hasMemo = !!memos[item.dateStr];
                         
@@ -287,6 +305,15 @@ export default function HistoryPage() {
                                                 {formatCurrency(log.total_expense)}
                                             </span>
                                         </div>
+                                        {dailySpending !== null && (
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[10px] text-gray-500 font-medium hidden md:block">일 사용</span>
+                                                <span className={`text-sm md:text-[10px] font-medium md:text-right ${dailySpending > 0 ? 'text-red-400' : dailySpending < 0 ? 'text-blue-400' : 'text-gray-400'}`}>
+                                                    <span className="md:hidden text-xs text-gray-500 mr-1">사용</span>
+                                                    {dailySpending > 0 ? '-' : dailySpending < 0 ? '+' : ''}{formatCurrency(Math.abs(dailySpending))}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="flex flex-col items-end">
                                             <span className="text-[10px] text-gray-500 font-medium hidden md:block">일 가용</span>
                                             <span className="text-sm md:text-[11px] font-bold text-emerald-400 md:text-right">
@@ -339,19 +366,32 @@ export default function HistoryPage() {
                 <div className="space-y-6">
                     {/* 자산 현황 요약 (모달 상단에 표시) */}
                     {selectedLog ? (
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 flex justify-between items-center border border-gray-200 dark:border-gray-700">
-                            <div className="flex flex-col items-center flex-1 border-r border-gray-200 dark:border-gray-700">
-                                <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">월 잔액</span>
-                                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                                    {formatCurrency(selectedLog.total_expense)}
-                                </span>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-center">
+                                <div className="flex flex-col items-center flex-1 border-r border-gray-200 dark:border-gray-700">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">월 잔액</span>
+                                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                                        {formatCurrency(selectedLog.total_expense)}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col items-center flex-1">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">일 가용 금액</span>
+                                    <span className="text-lg font-bold text-emerald-500">
+                                        {formatCurrency(selectedLog.daily_available)}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex flex-col items-center flex-1">
-                                <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">일 가용 금액</span>
-                                <span className="text-lg font-bold text-emerald-500">
-                                    {formatCurrency(selectedLog.daily_available)}
-                                </span>
-                            </div>
+                            {getDailySpending(selectedDate) !== null && (
+                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-col items-center">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">일일 사용 금액</span>
+                                    <span className={`text-lg font-bold ${getDailySpending(selectedDate)! > 0 ? 'text-red-500' : getDailySpending(selectedDate)! < 0 ? 'text-blue-500' : 'text-gray-400'}`}>
+                                        {getDailySpending(selectedDate)! > 0 ? '-' : getDailySpending(selectedDate)! < 0 ? '+' : ''}{formatCurrency(Math.abs(getDailySpending(selectedDate)!))}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 mt-1">
+                                        (전날 월 잔액과의 차이)
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="text-center py-4 text-gray-400 text-sm bg-gray-50 dark:bg-gray-800 rounded-xl">
