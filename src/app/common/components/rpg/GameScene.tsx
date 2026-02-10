@@ -15,7 +15,6 @@ export const GameScene = () => {
   const obstacles = useGameStore((state) => state.obstacles);
   const portals = useGameStore((state) => state.portals);
   const loots = useGameStore((state) => state.loots);
-  const checkLootCollection = useGameStore((state) => state.checkLootCollection);
   const cleanupLoots = useGameStore((state) => state.cleanupLoots);
   const projectiles = useGameStore((state) => state.projectiles);
   const moveProjectiles = useGameStore((state) => state.moveProjectiles);
