@@ -41,18 +41,18 @@ export default function RPGPage() {
 
       {/* Interaction Button */}
       {nearbyPortalId && (
-          <button 
+          <button
             onClick={handleInteraction}
-            className="absolute bottom-24 right-4 z-30 bg-blue-600/90 hover:bg-blue-500 text-white p-4 rounded-full border-2 border-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.6)] animate-pulse-glow transition-all active:scale-95"
+            className="absolute bottom-24 right-4 z-50 bg-blue-600/90 hover:bg-blue-500 text-white p-4 rounded-full border-2 border-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.6)] animate-pulse-glow transition-all active:scale-95"
           >
             <span className="text-2xl">🚪</span>
           </button>
       )}
 
       {/* Inventory Toggle Button (Mobile & Desktop) */}
-      <button 
+      <button
         onClick={toggleInventory}
-        className="absolute top-4 right-4 z-20 bg-gray-900/80 hover:bg-gray-800 text-white p-3 rounded-full border border-gray-700 shadow-xl transition-all active:scale-95"
+        className="absolute top-4 right-4 z-50 bg-gray-900/80 hover:bg-gray-800 text-white p-3 rounded-full border border-gray-700 shadow-xl transition-all active:scale-95"
       >
         <IconBag className="w-8 h-8" />
       </button>
@@ -66,7 +66,7 @@ export default function RPGPage() {
       </Canvas>
       
       {/* Back Button Overlay */}
-       <div className="absolute bottom-4 left-4 z-10">
+       <div className="absolute bottom-4 left-4 z-50">
         <a
           href="/"
           className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded backdrop-blur-sm transition-colors"
