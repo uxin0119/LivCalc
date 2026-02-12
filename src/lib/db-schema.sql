@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   email_verified TIMESTAMP,
   image TEXT,
-  password VARCHAR(255), -- 소셜 로그인 사용자는 NULL
+  password VARCHAR(255),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -38,12 +38,21 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Verification Tokens 테이블 (이메일 인증용)
+-- Verification Tokens 테이블
 CREATE TABLE IF NOT EXISTS verification_tokens (
   identifier VARCHAR(255) NOT NULL,
-  token VARCHAR(255) UNIQUE NOT NULL,
+  token VARCHAR(255) NOT NULL,
   expires TIMESTAMP NOT NULL,
-  PRIMARY KEY (identifier, token)
+  PRIMARY KEY (identifier, token),
+  UNIQUE (token)
+);
+
+-- Site Settings 테이블
+CREATE TABLE IF NOT EXISTS site_settings (
+  key VARCHAR(50) PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMP DEFAULT NOW(),
+  updated_by UUID REFERENCES users(id)
 );
 
 -- 인덱스 생성

@@ -5,6 +5,10 @@ import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET() {
+  return POST();
+}
+
 export async function POST() {
   try {
     const schemaPath = path.join(process.cwd(), 'src', 'lib', 'settings-schema.sql');
