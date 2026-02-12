@@ -7,16 +7,6 @@ if (process.env.NODE_ENV === 'development') {
 
 let connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 
-// 연결 문자열에 sslmode가 포함되어 있으면 pg 라이브러리 설정과 충돌할 수 있으므로 제거하거나 조정
-if (connectionString && connectionString.includes('sslmode=require')) {
-  // pg 라이브러리 설정을 위해 내부적으로 처리되도록 둡니다.
-}
-
-if (connectionString) {
-  const host = connectionString.split('@')[1]?.split(':')[0] || 'unknown';
-  console.log(`[DB] Attempting to connect to: ${host}`);
-}
-
 // 연결 풀을 초기화
 const pool = new Pool({
   connectionString,

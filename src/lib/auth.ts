@@ -89,29 +89,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!existingUser) {
-          console.log('[Auth] Creating new user:', user.email);
           // 새 사용자 생성
           const newUser = await queryOne<any>(
             'INSERT INTO users (email, name, image, email_verified) VALUES ($1, $2, $3, $4) RETURNING *',
             [user.email, user.name, user.image, new Date()]
           );
           user.id = newUser.id;
-          console.log('[Auth] New user created with ID:', user.id);
         } else {
           user.id = existingUser.id;
-          console.log('[Auth] Existing user found with ID:', user.id);
         }
 
         // 소셜 로그인인 경우 account 정보 저장
         if (account && account.provider !== 'credentials') {
-          console.log('[Auth] Processing social account:', account.provider);
           const existingAccount = await queryOne<any>(
             'SELECT * FROM accounts WHERE provider = $1 AND provider_account_id = $2',
             [account.provider, account.providerAccountId]
           );
 
           if (!existingAccount) {
-            console.log('[Auth] Linking new social account...');
             await query(
               `INSERT INTO accounts (user_id, type, provider, provider_account_id, refresh_token, access_token, expires_at, token_type, scope, id_token)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
@@ -128,15 +123,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 account.id_token,
               ]
             );
-            console.log('[Auth] Social account linked successfully');
           }
         }
 
         return true;
       } catch (error) {
-        console.error('Sign in error detail:', error);
-        // 에러가 발생해도 일단 로그인을 허용할지, 아니면 차단할지 결정해야 합니다.
-        // 디버깅을 위해 에러 메시지를 콘솔에 출력합니다.
+        console.error('Sign in error:', error);
         return false;
       }
     },
@@ -160,6 +152,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
 
-  debug: true, // 상세 디버그 로그 활성화
   secret: secret,
 });
