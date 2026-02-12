@@ -1,9 +1,7 @@
 import { Pool } from 'pg';
 
-// 로컬 개발 환경에서 self-signed certificate 에러 방지
-if (process.env.NODE_ENV === 'development') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
+// Supabase/Vercel 환경에서의 SSL 인증서 체인 오류 방지
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 
