@@ -7,7 +7,7 @@ import IconPicker from './IconPicker';
 import CategoryEditModal from './CategoryEditModal';
 import useCalcStore from './store';
 import CButton from '@/app/common/ui/CButton';
-import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import IconGrabbable from '@/app/common/icon/icon_grabbable';
@@ -44,7 +44,8 @@ const SortableCategoryItem: React.FC<SortableCategoryItemProps> = ({ category, o
       <div
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-300"
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-300 p-3 -m-1"
+        style={{ touchAction: 'none' }}
       >
         <IconGrabbable />
       </div>
@@ -78,6 +79,14 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({ isOpe
   const [newColor, setNewColor] = useState('blue');
   const [newIcon, setNewIcon] = useState('📊');
   const [editingCategory, setEditingCategory] = useState<CategoryData | null>(null);
+
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: { distance: 8 },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 200, tolerance: 5 },
+  });
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
 
@@ -113,7 +122,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({ isOpe
           {/* 섹션 목록 */}
           <div className="space-y-2">
             <div className="text-sm text-gray-400 mb-3">드래그하여 순서 변경</div>
-            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={sortedCategories.map(cat => cat.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {sortedCategories.map((category) => (

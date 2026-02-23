@@ -28,7 +28,7 @@ export const TokenStyles = {
 
     // 드래그 핸들
     dragHandle: {
-      base: 'cursor-grab active:cursor-grabbing w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300 select-none transition-colors',
+      base: 'cursor-grab active:cursor-grabbing w-14 sm:w-12 min-h-[60px] flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300 select-none transition-colors',
       border: 'border-r border-gray-600',
       hover: 'hover:bg-gray-700',
     },
