@@ -86,30 +86,30 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* 수입/지출 설정 */}
             <div>
                 <h3 className={TokenStyles.modal.sectionTitle}>수입/지출 설정</h3>
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <CButton
-                        onClick={() => onUpdateField('type', 'plus')}
-                        className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ${
-                            item.type === 'plus'
-                                ? 'bg-gray-900 text-white border-gray-900 shadow-md'
-                                : 'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600'
+                <div className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div className="flex flex-col">
+                        <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                            {item.type === 'plus' ? '✚ 수입' : '− 지출'}
+                        </span>
+                        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                            {item.type === 'plus' ? '총액에 더해집니다' : '총액에서 빼집니다'}
+                        </span>
+                    </div>
+                    <div
+                        className={`relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
+                            item.type === 'plus' ? 'bg-green-600' : 'bg-red-500'
                         }`}
+                        onClick={() => onUpdateField('type', item.type === 'plus' ? 'minus' : 'plus')}
                     >
-                        ✚ 수입으로 설정
-                    </CButton>
-                    <CButton
-                        onClick={() => onUpdateField('type', 'minus')}
-                        className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl border-2 font-medium transition-all duration-200 text-sm sm:text-base ${
-                            item.type === 'minus'
-                                ? 'bg-gray-900 text-white border-gray-900 shadow-md'
-                                : 'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        − 지출로 설정
-                    </CButton>
+                        <div
+                            className={`h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
+                                item.type === 'plus' ? 'translate-x-6' : 'translate-x-0'
+                            }`}
+                        />
+                    </div>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                    현재: {item.type === 'plus' ? '수입' : '지출'}
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">
+                    * 스위치를 클릭하여 수입/지출을 전환할 수 있습니다
                 </p>
             </div>
 

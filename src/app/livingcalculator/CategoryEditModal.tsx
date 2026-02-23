@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import Modal from '@/app/common/components/Modal';
 import CategoryData from './CategoryData';
-import ColorPicker from './ColorPicker';
-import IconPicker from './IconPicker';
 import useCalcStore from './store';
 import CButton from '@/app/common/ui/CButton';
 
@@ -16,14 +14,12 @@ interface CategoryEditModalProps {
 const CategoryEditModal: React.FC<CategoryEditModalProps> = ({ isOpen, onClose, category }) => {
   const { updateCategory, removeCategory, items } = useCalcStore();
   const [name, setName] = useState(category.name);
-  const [color, setColor] = useState(category.color);
-  const [icon, setIcon] = useState(category.icon);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const itemCount = items.filter(item => item.category === category.id).length;
 
   const handleSave = () => {
-    updateCategory(category.id, { name, color, icon });
+    updateCategory(category.id, { name });
     onClose();
   };
 
@@ -45,21 +41,6 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({ isOpen, onClose, 
             className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border-0 focus:ring-2 focus:ring-gray-500 focus:outline-none"
             placeholder="섹션 이름을 입력하세요"
           />
-        </div>
-
-        {/* 색상 선택 */}
-        <ColorPicker selectedColor={color} onSelect={setColor} />
-
-        {/* 아이콘 선택 */}
-        <IconPicker selectedIcon={icon} onSelect={setIcon} />
-
-        {/* 미리보기 */}
-        <div className="p-4 bg-gray-800/50 rounded-lg">
-          <div className="text-sm text-gray-400 mb-2">미리보기</div>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{icon}</span>
-            <span className="text-lg text-white font-medium">{name || '섹션 이름'}</span>
-          </div>
         </div>
 
         {/* 저장 버튼 */}

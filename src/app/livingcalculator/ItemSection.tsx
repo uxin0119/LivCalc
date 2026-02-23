@@ -1,36 +1,58 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import CButton from "@/app/common/ui/CButton";
 import CalcItem from "@/app/livingcalculator/CalcItem";
 import CalcData from "@/app/livingcalculator/CalcData";
 import SortableList from "@/app/common/components/SortableList";
 import useCalcStore from './store';
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
+import { ExchangeService } from './exchangeService';
 
 interface ItemSectionProps {
     category: string;
     title: string;
     placeholder: string;
-    color?: string;
-    icon?: string;
 }
 
-const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder, color = 'blue', icon = '📊' }) => {
+const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder }) => {
     const { items, addItem, reorderItemsInCategory } = useCalcStore();
 
     const safeItems: CalcData[] = Array.isArray(items) ? items : [];
     const categoryItems: CalcData[] = safeItems.filter(item => item && item.category === category);
 
-    const sectionTotal = useMemo(() => {
-        let total = 0;
-        safeItems.forEach(item => {
-            if (item && typeof item === 'object' && item.category === category && item.type !== undefined && item.value !== undefined) {
-                // 비활성화된 아이템은 섹션 합계에서도 제외
-                if (item.isActive === false) return;
-                const amount = item.type === "plus" ? item.value : -item.value;
-                total += amount;
+    const [sectionTotal, setSectionTotal] = useState(0);
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        // 초기값을 localStorage에서 불러오기
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem(`section-collapsed-${category}`);
+            return saved === 'true';
+        }
+        return false;
+    });
+
+    // 접기 상태 변경 시 localStorage에 저장
+    const handleToggleCollapse = () => {
+        const newState = !isCollapsed;
+        setIsCollapsed(newState);
+        localStorage.setItem(`section-collapsed-${category}`, String(newState));
+    };
+
+    // 환율을 적용한 섹션 합계 계산
+    useEffect(() => {
+        const calculateSectionTotal = async () => {
+            let total = 0;
+            for (const item of safeItems) {
+                if (item && typeof item === 'object' && item.category === category && item.type !== undefined && item.value !== undefined) {
+                    // 비활성화된 아이템은 섹션 합계에서도 제외
+                    if (item.isActive === false) continue;
+                    // 원화로 환산
+                    const krwValue = await ExchangeService.convertToKRW(item.value, item.currency || 'KRW');
+                    const amount = item.type === "plus" ? krwValue : -krwValue;
+                    total += amount;
+                }
             }
-        });
-        return total;
+            setSectionTotal(Math.round(total));
+        };
+        calculateSectionTotal();
     }, [safeItems, category]);
 
     const handleDragEnd = (activeId: string, overId: string) => {
@@ -40,49 +62,67 @@ const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder,
     return (
         <div className="mt-6">
             {/* 섹션 헤더 */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                <h2 className={TokenStyles.livingCalculator.sectionTitle}>
-                    <span className="mr-2">{icon}</span>
-                    {title}
-                </h2>
+            <div
+                className="flex justify-between items-center gap-4 mb-4 cursor-pointer select-none"
+                onClick={handleToggleCollapse}
+            >
+                <div className="flex items-center gap-2">
+                    <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <h2 className={TokenStyles.livingCalculator.sectionTitle}>
+                        {title}
+                    </h2>
+                    {isCollapsed && (
+                        <span className="text-sm text-gray-500">({categoryItems.length})</span>
+                    )}
+                </div>
                 <div className={sectionTotal >= 0 ? TokenStyles.livingCalculator.sectionTotal.positive : TokenStyles.livingCalculator.sectionTotal.negative}>
                     {sectionTotal.toLocaleString()}원
                 </div>
             </div>
 
-            {/* 아이템 목록 */}
-            <SortableList
-                items={categoryItems}
-                onDragEnd={handleDragEnd}
-                strategy="vertical"
-                className="space-y-0"
-            >
-                {categoryItems.map((item) => (
-                    <CalcItem
-                        key={item.id}
-                        id={item.id}
-                        item={item}
-                        placeholder={placeholder}
-                    />
-                ))}
-            </SortableList>
+            {/* 접기/펼치기 영역 */}
+            <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[5000px] opacity-100'}`}>
+                {/* 아이템 목록 */}
+                <SortableList
+                    items={categoryItems}
+                    onDragEnd={handleDragEnd}
+                    strategy="vertical"
+                    className="space-y-0"
+                >
+                    {categoryItems.map((item) => (
+                        <CalcItem
+                            key={item.id}
+                            id={item.id}
+                            item={item}
+                            placeholder={placeholder}
+                        />
+                    ))}
+                </SortableList>
 
-            {/* 항목 추가 버튼 */}
-            <div className={TokenStyles.livingCalculator.addButtonArea.container}>
-                <div className={TokenStyles.livingCalculator.addButtonArea.label}>항목 추가</div>
-                <div className={TokenStyles.livingCalculator.addButtonArea.buttonContainer}>
-                    <CButton
-                        onClick={() => addItem(category, "plus")}
-                        className={TokenStyles.livingCalculator.button.income}
-                    >
-                        ✚ 수입
-                    </CButton>
-                    <CButton
-                        onClick={() => addItem(category, "minus")}
-                        className={TokenStyles.livingCalculator.button.expense}
-                    >
-                        − 지출
-                    </CButton>
+                {/* 항목 추가 버튼 */}
+                <div className={TokenStyles.livingCalculator.addButtonArea.container}>
+                    <div className={TokenStyles.livingCalculator.addButtonArea.label}>항목 추가</div>
+                    <div className={TokenStyles.livingCalculator.addButtonArea.buttonContainer}>
+                        <CButton
+                            onClick={() => addItem(category, "plus")}
+                            className={TokenStyles.livingCalculator.button.income}
+                        >
+                            ✚ 수입
+                        </CButton>
+                        <CButton
+                            onClick={() => addItem(category, "minus")}
+                            className={TokenStyles.livingCalculator.button.expense}
+                        >
+                            − 지출
+                        </CButton>
+                    </div>
                 </div>
             </div>
         </div>

@@ -213,8 +213,6 @@ export default function LivingCalculatorPage() {
                                 category={category.id}
                                 title={category.name}
                                 placeholder={"금액"}
-                                color={category.color}
-                                icon={category.icon}
                             />
                         ))}
                         <TotalArea />

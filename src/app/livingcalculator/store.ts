@@ -161,27 +161,29 @@ const useCalcStore = create<CalcState>((set, get) => ({
   },
   updateItemField: <K extends keyof CalcData>(id: string, field: K, value: CalcData[K]) => {
     set(state => {
-      const updatedItems = state.items.map(item => 
+      const updatedItems = state.items.map(item =>
         item.id === id ? { ...item, [field]: value } : item
       );
       return { items: updatedItems };
     });
-    // 비동기 함수 호출
-    setTimeout(() => {
-      get().calculateTotals();
-    }, 0);
+    // debounce된 계산 함수 호출 (타이핑 중 과도한 계산 방지)
+    if (!debouncedCalculate) {
+      debouncedCalculate = debounce(() => get().calculateTotals(), 300);
+    }
+    debouncedCalculate();
   },
   updateItemFields: (id, fields) => {
     set(state => {
-      const updatedItems = state.items.map(item => 
+      const updatedItems = state.items.map(item =>
         item.id === id ? { ...item, ...fields } : item
       );
       return { items: updatedItems };
     });
-    // 비동기 함수 호출
-    setTimeout(() => {
-      get().calculateTotals();
-    }, 0);
+    // debounce된 계산 함수 호출
+    if (!debouncedCalculate) {
+      debouncedCalculate = debounce(() => get().calculateTotals(), 300);
+    }
+    debouncedCalculate();
   },
   handleDragEnd: (event: any) => {
     const { active, over } = event;
@@ -432,13 +434,37 @@ const useCalcStore = create<CalcState>((set, get) => ({
   }
 }));
 
+// Debounce 함수
+const debounce = <T extends (...args: Parameters<T>) => void>(
+  fn: T,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+};
+
+// Debounced 저장 함수 (1초 딜레이)
+const debouncedSaveItems = debounce((items: CalcData[]) => {
+  util.saveLocalStorage("livingData", items);
+}, 1000);
+
+const debouncedSaveCategories = debounce((categories: CategoryData[]) => {
+  util.saveLocalStorage("livingCategories", categories);
+}, 1000);
+
+// Debounced 계산 함수 (300ms 딜레이 - 타이핑 중 과도한 계산 방지)
+let debouncedCalculate: (() => void) | null = null;
+
 useCalcStore.subscribe(
   (state, prevState) => {
     if (!state.isInitialLoad && state.items !== prevState.items) {
-      util.saveLocalStorage("livingData", state.items);
+      debouncedSaveItems(state.items);
     }
     if (!state.isInitialLoad && state.categories !== prevState.categories) {
-      util.saveLocalStorage("livingCategories", state.categories);
+      debouncedSaveCategories(state.categories);
     }
   },
 );
