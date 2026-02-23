@@ -43,73 +43,50 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="아이템 설정">
         <div className="space-y-4 sm:space-y-6">
-            {/* 항목명 표시 */}
-            <div className="text-center p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                <h2 className={TokenStyles.modal.itemTitle}>
-                    {item.name || "이름 없는 항목"}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    현재 설정을 수정할 수 있습니다
-                </p>
-            </div>
-
-            {/* 활성화/비활성화 설정 */}
-            <div>
-                <h3 className={TokenStyles.modal.sectionTitle}>아이템 상태</h3>
-                <div className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="flex flex-col">
-                        <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
-                            {item.isActive ? '활성화됨' : '비활성화됨'}
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                            {item.isActive ? '계산에 포함됩니다' : '계산에서 제외됩니다'}
-                        </span>
-                    </div>
+            {/* 항목명 및 금액 */}
+            <div className="p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                    <h2 className={`${TokenStyles.modal.itemTitle} flex-1 truncate`}>
+                        {item.name || "이름 없는 항목"}
+                    </h2>
                     <div
-                        className={`relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
-                            item.isActive ? 'bg-gray-900' : 'bg-gray-300 dark:bg-gray-600'
+                        className={`relative inline-flex h-7 w-12 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 flex-shrink-0 ${
+                            item.isActive ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
                         }`}
                         onClick={() => onUpdateField('isActive', !item.isActive)}
+                        title={item.isActive ? '활성화됨 - 클릭하여 비활성화' : '비활성화됨 - 클릭하여 활성화'}
                     >
                         <div
-                            className={`h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
-                                item.isActive ? 'translate-x-6' : 'translate-x-0'
+                            className={`h-5 w-5 rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
+                                item.isActive ? 'translate-x-5' : 'translate-x-0'
                             }`}
                         />
                     </div>
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">
-                    * 스위치를 클릭하여 상태를 변경할 수 있습니다
-                </p>
-            </div>
-
-            {/* 수입/지출 설정 */}
-            <div>
-                <h3 className={TokenStyles.modal.sectionTitle}>수입/지출 설정</h3>
-                <div className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="flex flex-col">
-                        <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
-                            {item.type === 'plus' ? '✚ 수입' : '− 지출'}
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                            {item.type === 'plus' ? '총액에 더해집니다' : '총액에서 빼집니다'}
-                        </span>
-                    </div>
-                    <div
-                        className={`relative inline-flex h-8 w-14 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
-                            item.type === 'plus' ? 'bg-green-600' : 'bg-red-500'
-                        }`}
+                <div className="flex items-center gap-2">
+                    <button
                         onClick={() => onUpdateField('type', item.type === 'plus' ? 'minus' : 'plus')}
+                        className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg font-bold text-lg transition-colors ${item.type === 'plus' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+                        title="클릭하여 수입/지출 전환"
                     >
-                        <div
-                            className={`h-6 w-6 rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
-                                item.type === 'plus' ? 'translate-x-6' : 'translate-x-0'
-                            }`}
+                        {item.type === 'plus' ? '+' : '−'}
+                    </button>
+                    <div className="flex-1 relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium z-10">
+                            {item.currency === 'USD' ? '$' : item.currency === 'JPY' ? '¥' : '₩'}
+                        </span>
+                        <CInputCurrency
+                            value={item.value}
+                            onChange={(value) => onUpdateField('value', Number(value))}
+                            placeholder="금액 입력"
+                            min={0}
+                            className="w-full text-right text-lg font-semibold bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 rounded-lg pl-8"
+                            selectOnFocus={true}
                         />
                     </div>
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">
-                    * 스위치를 클릭하여 수입/지출을 전환할 수 있습니다
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
+                    * +/- 버튼: 수입/지출 전환 | 토글: {item.isActive ? '활성화됨' : '비활성화됨'}
                 </p>
             </div>
 
@@ -169,6 +146,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         onChange={(val) => onUpdateField('activationDay', Number(val))}
                                         min={1}
                                         max={31}
+                                        selectOnFocus={true}
                                         className={TokenStyles.common.input.base + " w-20 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"}
                                     />
                                     <span className="text-sm text-gray-600 dark:text-gray-400">일에 활성화</span>
@@ -211,6 +189,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         onChange={(val) => onUpdateField('deactivationDay', Number(val))}
                                         min={1}
                                         max={31}
+                                        selectOnFocus={true}
                                         className={TokenStyles.common.input.base + " w-20 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"}
                                     />
                                     <span className="text-sm text-gray-600 dark:text-gray-400">일에 종료</span>
@@ -253,6 +232,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                         onChange={(val) => onUpdateField('modificationDay', Number(val))}
                                         min={1}
                                         max={31}
+                                        selectOnFocus={true}
                                         className={TokenStyles.common.input.base + " w-20 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"}
                                     />
                                     <span className="text-sm text-gray-600 dark:text-gray-400">일에 확인</span>
