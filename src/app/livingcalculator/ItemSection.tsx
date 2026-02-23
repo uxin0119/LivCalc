@@ -59,48 +59,24 @@ const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder 
         reorderItemsInCategory(category, activeId, overId);
     };
 
-    // 스케줄 알림 계산 (오늘 또는 3일 이내)
+    // 스케줄 알림 계산 (오늘만)
     const getScheduleNotifications = () => {
         const today = new Date().getDate();
-        const notifications: { type: 'activation' | 'deactivation' | 'modification'; count: number; isToday: boolean }[] = [];
+        const notifications: { type: 'activation' | 'deactivation' | 'modification'; count: number }[] = [];
 
         let activationCount = 0;
-        let activationToday = false;
         let deactivationCount = 0;
-        let deactivationToday = false;
         let modificationCount = 0;
-        let modificationToday = false;
 
         categoryItems.forEach(item => {
-            // 활성화 예정
-            if (item.activationDay) {
-                const diff = item.activationDay - today;
-                if (diff >= 0 && diff <= 3) {
-                    activationCount++;
-                    if (diff === 0) activationToday = true;
-                }
-            }
-            // 종료 예정
-            if (item.deactivationDay) {
-                const diff = item.deactivationDay - today;
-                if (diff >= 0 && diff <= 3) {
-                    deactivationCount++;
-                    if (diff === 0) deactivationToday = true;
-                }
-            }
-            // 수정 권고
-            if (item.modificationDay) {
-                const diff = item.modificationDay - today;
-                if (diff >= 0 && diff <= 3) {
-                    modificationCount++;
-                    if (diff === 0) modificationToday = true;
-                }
-            }
+            if (item.activationDay === today) activationCount++;
+            if (item.deactivationDay === today) deactivationCount++;
+            if (item.modificationDay === today) modificationCount++;
         });
 
-        if (activationCount > 0) notifications.push({ type: 'activation', count: activationCount, isToday: activationToday });
-        if (deactivationCount > 0) notifications.push({ type: 'deactivation', count: deactivationCount, isToday: deactivationToday });
-        if (modificationCount > 0) notifications.push({ type: 'modification', count: modificationCount, isToday: modificationToday });
+        if (activationCount > 0) notifications.push({ type: 'activation', count: activationCount });
+        if (deactivationCount > 0) notifications.push({ type: 'deactivation', count: deactivationCount });
+        if (modificationCount > 0) notifications.push({ type: 'modification', count: modificationCount });
 
         return notifications;
     };
@@ -129,31 +105,25 @@ const ItemSection: React.FC<ItemSectionProps> = ({ category, title, placeholder 
                     {isCollapsed && (
                         <span className="text-sm text-gray-500">({categoryItems.length})</span>
                     )}
-                    {/* 스케줄 알림 배지 */}
+                    {/* 스케줄 알림 배지 (오늘) */}
                     {notifications.length > 0 && (
                         <div className="flex items-center gap-1">
                             {notifications.map((notif) => (
                                 <span
                                     key={notif.type}
-                                    className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                                    className={`text-xs px-1.5 py-0.5 rounded-full font-medium animate-pulse ${
                                         notif.type === 'activation'
-                                            ? notif.isToday
-                                                ? 'bg-green-500 text-white animate-pulse'
-                                                : 'bg-green-500/20 text-green-400'
+                                            ? 'bg-green-500 text-white'
                                             : notif.type === 'deactivation'
-                                                ? notif.isToday
-                                                    ? 'bg-red-500 text-white animate-pulse'
-                                                    : 'bg-red-500/20 text-red-400'
-                                                : notif.isToday
-                                                    ? 'bg-purple-500 text-white animate-pulse'
-                                                    : 'bg-purple-500/20 text-purple-400'
+                                                ? 'bg-red-500 text-white'
+                                                : 'bg-purple-500 text-white'
                                     }`}
                                     title={
                                         notif.type === 'activation'
-                                            ? `${notif.count}개 항목 활성화 예정`
+                                            ? `오늘 ${notif.count}개 항목 활성화`
                                             : notif.type === 'deactivation'
-                                                ? `${notif.count}개 항목 종료 예정`
-                                                : `${notif.count}개 항목 수정 권고`
+                                                ? `오늘 ${notif.count}개 항목 종료`
+                                                : `오늘 ${notif.count}개 항목 수정 권고`
                                     }
                                 >
                                     {notif.type === 'activation' ? '▲' : notif.type === 'deactivation' ? '▼' : '✎'}
