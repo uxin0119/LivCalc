@@ -4,7 +4,8 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -57,16 +58,24 @@ function SortableList<T extends { id: string }>({
 }: SortableListProps<T>) {
   const [activeId, setActiveId] = React.useState<UniqueIdentifier | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px 이동 후 드래그 시작
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 8, // 8px 이동 후 드래그 시작
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 200, // 200ms 누르고 있어야 드래그 시작 (스크롤과 구분)
+      tolerance: 5, // 5px 이내 움직임은 허용
+    },
+  });
+
+  const keyboardSensor = useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates,
+  });
+
+  const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
 
   const getStrategy = () => {
     switch (strategy) {
