@@ -316,7 +316,7 @@ const useCalcStore = create<CalcState>((set, get) => ({
 
     set({
         monthTotal: Math.round(newMonthTotal),
-        dailyAvailable: Math.floor(newMonthTotal / daysLeft),
+        dailyAvailable: newMonthTotal < 0 ? 0 : Math.floor(newMonthTotal / daysLeft),
         fixedTotal: Math.floor(fixedTotal / daysInMonth)
     });
   },
