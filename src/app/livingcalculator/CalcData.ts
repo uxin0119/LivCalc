@@ -15,5 +15,8 @@ type CalcData = {
     deactivationDay?: number; // 자동 비활성화일 (매월 1-31일)
     modificationDay?: number; // 수정 권고일 (매월 1-31일)
     hasSchedule?: boolean;  // 스케줄링 기능 사용 여부
+    isInstallment?: boolean; // 할부 여부
+    installmentStartMonth?: string; // 할부 시작월 (YYYY-MM)
+    installmentEndMonth?: string; // 할부 종료월 (YYYY-MM)
 };
 export default CalcData;

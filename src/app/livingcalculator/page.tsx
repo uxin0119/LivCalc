@@ -12,10 +12,11 @@ import { useSession } from 'next-auth/react';
 type SyncStatus = 'synced' | 'saving' | 'error' | 'loading';
 
 export default function LivingCalculatorPage() {
-    const { items, categories, loadFirstLivingData, checkAndApplyScheduling, setItems, setCategories, isInitialLoad, dailyAvailable, monthTotal } = useCalcStore();
+    const { items, categories, loadFirstLivingData, checkAndApplyScheduling, setItems, setCategories, isInitialLoad, dailyAvailable, monthTotal, settlementDay, setSettlementDay } = useCalcStore();
     const { data: session, status } = useSession();
     const [isItemDetailOpen, setIsItemDetailOpen] = useState(false);
     const [isCategoryManagementOpen, setIsCategoryManagementOpen] = useState(false);
+    const [isSettlementEditing, setIsSettlementEditing] = useState(false);
     
     // 동기화 상태 관리
     const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
@@ -45,6 +46,9 @@ export default function LivingCalculatorPage() {
                         setItems(result.data);
                         if (result.categories && Array.isArray(result.categories) && result.categories.length > 0) {
                             setCategories(result.categories);
+                        }
+                        if (result.settlementDay !== undefined) {
+                            setSettlementDay(result.settlementDay);
                         }
                         setSyncStatus('synced');
                         setLastSavedTime(new Date());
@@ -93,6 +97,7 @@ export default function LivingCalculatorPage() {
                     body: JSON.stringify({
                         data: items,
                         categories: categories,
+                        settlementDay: settlementDay,
                         summary: {
                             dailyAvailable,
                             monthTotal
@@ -116,7 +121,7 @@ export default function LivingCalculatorPage() {
                 clearTimeout(autoSaveTimerRef.current);
             }
         };
-    }, [items, categories, status, isInitialLoad, dailyAvailable, monthTotal]);
+    }, [items, categories, status, isInitialLoad, dailyAvailable, monthTotal, settlementDay]);
 
     // 3. 스케줄링 체크
     useEffect(() => {
@@ -203,6 +208,56 @@ export default function LivingCalculatorPage() {
                             <h1 className={`${TokenStyles.livingCalculator.title}`}>생활비 계산기</h1>
                         </div>
                         <p className={`${TokenStyles.livingCalculator.subtitle} px-4`}>월간 수입과 지출을 관리하고 일일 사용 가능 금액을 확인하세요</p>
+                    </div>
+
+                    {/* 정산일 */}
+                    <div className="mb-4 sm:mb-6">
+                        <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-400 text-sm">정산일</span>
+                                {isSettlementEditing ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={31}
+                                            value={settlementDay || ''}
+                                            onChange={(e) => setSettlementDay(Number(e.target.value))}
+                                            placeholder="일"
+                                            className="w-16 bg-gray-700 text-white text-center text-sm px-2 py-1 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                            autoFocus
+                                        />
+                                        <span className="text-gray-400 text-sm">일</span>
+                                        <button
+                                            onClick={() => setIsSettlementEditing(false)}
+                                            className="text-blue-400 text-sm hover:text-blue-300"
+                                        >
+                                            완료
+                                        </button>
+                                        {settlementDay > 0 && (
+                                            <button
+                                                onClick={() => { setSettlementDay(0); setIsSettlementEditing(false); }}
+                                                className="text-red-400 text-xs hover:text-red-300"
+                                            >
+                                                해제
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsSettlementEditing(true)}
+                                        className="text-white text-sm font-medium hover:text-blue-400 transition-colors"
+                                    >
+                                        {settlementDay > 0 ? `매월 ${settlementDay}일` : '미설정'}
+                                    </button>
+                                )}
+                            </div>
+                            {!isSettlementEditing && settlementDay > 0 && (
+                                <span className="text-xs text-gray-500">
+                                    정산일 기준으로 일일 가용 금액이 계산됩니다
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     {/* 메인 컨텐츠 */}

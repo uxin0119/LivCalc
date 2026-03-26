@@ -7,16 +7,46 @@ import { ExchangeService } from './exchangeService';
 import { loadDataFromUrl, clearDataFromUrl } from '@/app/common/utils/DataSharing';
 import { applyScheduling, getScheduledStateChanges } from './schedulingUtils';
 
-const getCurrentMonthDays = (): number => {
+const getCurrentMonthDays = (settlementDay?: number): number => {
     const now = new Date();
+    if (settlementDay && settlementDay > 0) {
+        // 정산일 기준: 정산일~다음 정산일까지의 일수
+        const currentDay = now.getDate();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        if (currentDay >= settlementDay) {
+            // 이번 달 정산일 ~ 다음 달 정산일
+            const start = new Date(year, month, settlementDay);
+            const end = new Date(year, month + 1, settlementDay);
+            return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+            // 지난 달 정산일 ~ 이번 달 정산일
+            const start = new Date(year, month - 1, settlementDay);
+            const end = new Date(year, month, settlementDay);
+            return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        }
+    }
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
     return new Date(year, month, 0).getDate() + 1;
 };
 
-const getDaysLeftInMonth = (): number => {
+const getDaysLeftInMonth = (settlementDay?: number): number => {
     const today = new Date();
     const currentDay = today.getDate();
+    if (settlementDay && settlementDay > 0) {
+        // 정산일 기준 남은 일수
+        if (currentDay >= settlementDay) {
+            // 다음 달 정산일까지
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            const nextSettlement = new Date(year, month + 1, settlementDay);
+            return Math.round((nextSettlement.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+            // 이번 달 정산일까지
+            return settlementDay - currentDay;
+        }
+    }
     const daysInCurrentMonth = getCurrentMonthDays();
     return daysInCurrentMonth - currentDay;
 };
@@ -29,6 +59,8 @@ interface CalcState {
   monthTotal: number;
   dailyAvailable: number;
   fixedTotal: number;
+  settlementDay: number; // 정산일 (매월 1-31일)
+  setSettlementDay: (day: number) => void;
   loadFirstLivingData: () => void;
   loadDataFromSharedUrl: () => boolean;
   addItem: (category: string, type: "plus" | "minus") => void;
@@ -57,6 +89,13 @@ const useCalcStore = create<CalcState>((set, get) => ({
   monthTotal: 0,
   dailyAvailable: 0,
   fixedTotal: 0,
+  settlementDay: 0, // 0 = 미설정
+  setSettlementDay: (day: number) => {
+    set({ settlementDay: day });
+    util.saveLocalStorage("livingSettlementDay", day);
+    // 정산일 변경 시 총액 재계산
+    setTimeout(() => get().calculateTotals(), 0);
+  },
   loadFirstLivingData: () => {
     // 먼저 URL에서 공유된 데이터가 있는지 확인
     const urlDataLoaded = get().loadDataFromSharedUrl();
@@ -65,6 +104,10 @@ const useCalcStore = create<CalcState>((set, get) => ({
       // URL 데이터가 없으면 로컬 스토리지에서 로드
       const jsonString: CalcData[] | null = util.loadLocalStorage("livingData");
       const savedCategories: CategoryData[] | null = util.loadLocalStorage("livingCategories");
+      const savedSettlementDay: number | null = util.loadLocalStorage("livingSettlementDay");
+      if (savedSettlementDay) {
+        set({ settlementDay: savedSettlementDay });
+      }
 
       // 카테고리 마이그레이션
       if (!savedCategories || savedCategories.length === 0) {
@@ -241,12 +284,13 @@ const useCalcStore = create<CalcState>((set, get) => ({
   },
   calculateTotals: async () => {
     const items = get().items;
+    const settlementDay = get().settlementDay;
     let newMonthTotal = 0;
     let fixedTotal = 0;
 
     // 매번 호출 시 현재 날짜 기준으로 계산 (날짜가 바뀌면 자동 반영)
-    const daysLeft = getDaysLeftInMonth();
-    const daysInMonth = getCurrentMonthDays();
+    const daysLeft = getDaysLeftInMonth(settlementDay);
+    const daysInMonth = getCurrentMonthDays(settlementDay);
 
     // 환율을 적용한 계산을 위해 각 아이템을 원화로 환산 (활성화된 아이템만)
     for (const item of items) {
@@ -465,6 +509,9 @@ useCalcStore.subscribe(
     }
     if (!state.isInitialLoad && state.categories !== prevState.categories) {
       debouncedSaveCategories(state.categories);
+    }
+    if (!state.isInitialLoad && state.settlementDay !== prevState.settlementDay) {
+      util.saveLocalStorage("livingSettlementDay", state.settlementDay);
     }
   },
 );

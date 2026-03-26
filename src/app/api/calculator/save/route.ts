@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, categories, summary, clientDate } = await request.json();
+    const { data, categories, settlementDay, summary, clientDate } = await request.json();
 
     if (!data) {
       return NextResponse.json(
@@ -28,7 +28,8 @@ export async function POST(request: Request) {
     // items와 categories를 함께 저장 (Main Data)
     const saveData = {
       items: data,
-      categories: categories || []
+      categories: categories || [],
+      settlementDay: settlementDay || 0
     };
 
     // 1. 메인 데이터 저장 (Update or Insert)

@@ -31,7 +31,7 @@ export async function GET() {
     }
 
     // 데이터 형식 체크 (하위 호환성)
-    let items, categories;
+    let items, categories, settlementDay = 0;
     if (Array.isArray(result.data)) {
       // 구 형식: 배열만 있는 경우
       items = result.data;
@@ -40,6 +40,7 @@ export async function GET() {
       // 신 형식: { items, categories } 객체
       items = result.data.items || [];
       categories = result.data.categories || [];
+      settlementDay = result.data.settlementDay || 0;
     } else {
       items = [];
       categories = [];
@@ -49,6 +50,7 @@ export async function GET() {
       success: true,
       data: items,
       categories: categories,
+      settlementDay: settlementDay,
       updatedAt: result.updated_at,
     });
   } catch (error) {

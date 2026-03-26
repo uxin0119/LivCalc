@@ -246,6 +246,90 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
             </div>
 
+            {/* 할부 설정 */}
+            <div>
+                <h3 className={TokenStyles.modal.sectionTitle}>할부 설정</h3>
+                <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-4">
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                                할부 결제
+                            </span>
+                            <div
+                                className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ${
+                                    item.isInstallment ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                                }`}
+                                onClick={() => {
+                                    const newVal = !item.isInstallment;
+                                    onUpdateField('isInstallment', newVal);
+                                    if (!newVal) {
+                                        onUpdateField('installmentStartMonth', undefined);
+                                        onUpdateField('installmentEndMonth', undefined);
+                                    } else if (!item.installmentStartMonth) {
+                                        const now = new Date();
+                                        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                                        onUpdateField('installmentStartMonth', currentMonth);
+                                    }
+                                }}
+                            >
+                                <div
+                                    className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                                        item.isInstallment ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                />
+                            </div>
+                        </div>
+                        {item.isInstallment && (
+                            <div className="animate-fadeIn pl-2 border-l-2 border-blue-500 space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">시작월</span>
+                                    <input
+                                        type="month"
+                                        value={item.installmentStartMonth || ''}
+                                        onChange={(e) => onUpdateField('installmentStartMonth', e.target.value)}
+                                        className={TokenStyles.common.input.base + " flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">종료월</span>
+                                    <input
+                                        type="month"
+                                        value={item.installmentEndMonth || ''}
+                                        onChange={(e) => onUpdateField('installmentEndMonth', e.target.value)}
+                                        min={item.installmentStartMonth || ''}
+                                        className={TokenStyles.common.input.base + " flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"}
+                                    />
+                                </div>
+                                {item.installmentStartMonth && item.installmentEndMonth && (() => {
+                                    const [sy, sm] = item.installmentStartMonth.split('-').map(Number);
+                                    const [ey, em] = item.installmentEndMonth.split('-').map(Number);
+                                    const totalMonths = (ey - sy) * 12 + (em - sm) + 1;
+                                    const now = new Date();
+                                    const currentYM = now.getFullYear() * 12 + now.getMonth();
+                                    const startYM = sy * 12 + (sm - 1);
+                                    const endYM = ey * 12 + (em - 1);
+                                    const paidMonths = Math.max(0, Math.min(currentYM - startYM + 1, totalMonths));
+                                    const remainingMonths = Math.max(0, endYM - currentYM);
+                                    const isCompleted = currentYM > endYM;
+                                    return (
+                                        <div className={`text-xs p-2 rounded-lg ${isCompleted ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
+                                            {isCompleted ? (
+                                                <span>할부 완료 (총 {totalMonths}개월)</span>
+                                            ) : (
+                                                <span>총 {totalMonths}개월 중 {paidMonths}개월 납부 / 잔여 {remainingMonths}개월</span>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    * 할부 기간을 설정하면 아이템에 잔여 개월이 표시됩니다.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             {/* 삭제 */}
             <div>
                 <h3 className={TokenStyles.modal.sectionTitle}>위험한 작업</h3>
@@ -324,6 +408,7 @@ const InactiveItemContent: React.FC<InactiveItemContentProps> = ({
                 <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
                     (비활성화{item.currency && item.currency !== 'KRW' ? ` - ${item.currency}` : ''})
                 </span>
+                <InstallmentIndicator item={item} />
             </div>
             {item.activationDay && (
                 <div className="text-[10px] text-green-500 flex items-center gap-1 mt-0.5">
@@ -359,6 +444,36 @@ interface ActiveItemContentProps {
     onSettingsClick: () => void;
 }
 
+
+/**
+ * 할부 잔여 정보 인디케이터
+ */
+const InstallmentIndicator = ({ item }: { item: CalcData }) => {
+    if (!item.isInstallment || !item.installmentStartMonth || !item.installmentEndMonth) return null;
+
+    const [sy, sm] = item.installmentStartMonth.split('-').map(Number);
+    const [ey, em] = item.installmentEndMonth.split('-').map(Number);
+    const totalMonths = (ey - sy) * 12 + (em - sm) + 1;
+    const now = new Date();
+    const currentYM = now.getFullYear() * 12 + now.getMonth();
+    const endYM = ey * 12 + (em - 1);
+    const remainingMonths = Math.max(0, endYM - currentYM);
+    const isCompleted = currentYM > endYM;
+
+    if (isCompleted) {
+        return (
+            <span className="text-[10px] sm:text-xs bg-green-900/60 text-green-400 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                할부완료
+            </span>
+        );
+    }
+
+    return (
+        <span className="text-[10px] sm:text-xs bg-blue-900/60 text-blue-400 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+            할부 {remainingMonths}/{totalMonths}개월
+        </span>
+    );
+};
 
 /**
  * 날짜 표시 인디케이터
@@ -482,14 +597,17 @@ const ActiveItemContent: React.FC<ActiveItemContentProps> = ({
             />
             <DragHandle dragHandleProps={dragHandleProps} />
             <div className="flex-1 p-4 space-y-3">
-                <CInput
-                    type="text"
-                    value={item.name}
-                    onChange={onNameChange}
-                    placeholder="항목명 입력"
-                    className={TokenStyles.livingCalculator.input.text}
-                    disabled={isDragging}
-                />
+                <div className="flex items-center gap-2">
+                    <CInput
+                        type="text"
+                        value={item.name}
+                        onChange={onNameChange}
+                        placeholder="항목명 입력"
+                        className={TokenStyles.livingCalculator.input.text + " flex-1"}
+                        disabled={isDragging}
+                    />
+                    <InstallmentIndicator item={item} />
+                </div>
                 <div className="flex items-center gap-2 min-w-0">
                     <div className="flex-shrink-0 relative z-20">
                         <div 
