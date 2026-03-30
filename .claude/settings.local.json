@@ -17,7 +17,10 @@
       "Bash(timeout 180 npm run build:*)",
       "Bash(git checkout:*)",
       "Bash(timeout /t 3)",
-      "Bash(mkdir -p \"src/app/auto-log\")"
+      "Bash(mkdir -p \"src/app/auto-log\")",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__mcp-registry__search_mcp_registry",
+      "mcp__notion__API-get-self"
     ],
     "deny": [],
     "ask": []
