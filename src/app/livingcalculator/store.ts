@@ -126,7 +126,6 @@ const useCalcStore = create<CalcState>((set, get) => ({
         }));
         set({ items: migratedItems, isInitialLoad: false });
         setTimeout(() => {
-          get().checkAndApplyScheduling();
           get().calculateTotals();
         }, 0);
       } else {
@@ -164,9 +163,8 @@ const useCalcStore = create<CalcState>((set, get) => ({
         // URL에서 데이터 파라미터 제거 (깔끔한 URL로 만들기)
         clearDataFromUrl();
 
-        // 스케줄링 체크 후 계산 실행
+        // 계산 실행 (스케줄링은 page.tsx에서 데이터 로드 완료 후 실행)
         setTimeout(() => {
-          get().checkAndApplyScheduling();
           get().calculateTotals();
         }, 0);
 
@@ -337,73 +335,53 @@ const useCalcStore = create<CalcState>((set, get) => ({
 
   checkAndApplyScheduling: () => {
     const items = get().items;
-    
-    // 1. 기존 스케줄링 변경사항 확인
-    const scheduleChanges = getScheduledStateChanges(items);
-    
-    // 2. 월간 자동화 (Monthly Recurring)
+    if (items.length === 0) return;
+
     const today = new Date();
     const todayDay = today.getDate(); // 1-31
 
-    // 자동 활성화 대상 (비활성 상태 & 오늘이 활성화일)
-    const activationTargets = items.filter(item => 
-        !item.isActive && item.activationDay === todayDay
-    );
+    // 변경사항 적용
+    const updatedItems = items.map(item => {
+        let newItem = item;
 
-    // 자동 비활성화 대상 (활성 상태 & 오늘이 비활성화일)
-    const deactivationTargets = items.filter(item => 
-        item.isActive && item.deactivationDay === todayDay
-    );
+        // 매월 자동화가 설정된 경우: 매월 자동화만 적용 (레거시 스케줄링 무시)
+        const hasMonthlyAutomation = item.activationDay || item.deactivationDay;
 
-    if (scheduleChanges.length > 0 || activationTargets.length > 0 || deactivationTargets.length > 0) {
-      if (process.env.NODE_ENV === 'development') {
-        if (scheduleChanges.length > 0) {
-            console.log('스케줄링 변경:', scheduleChanges.map(c => c.item.name).join(', '));
+        if (hasMonthlyAutomation) {
+            // 매월 자동 활성화
+            if (!newItem.isActive && newItem.activationDay === todayDay) {
+                newItem = { ...newItem, isActive: true };
+            }
+
+            // 매월 자동 비활성화 (활성화보다 우선)
+            if (newItem.isActive && newItem.deactivationDay === todayDay) {
+                newItem = { ...newItem, isActive: false };
+            }
+        } else if (item.hasSchedule) {
+            // 레거시 스케줄링 (매월 자동화가 없는 경우에만)
+            const scheduleChanges = getScheduledStateChanges([item]);
+            if (scheduleChanges.length > 0) {
+                newItem = { ...newItem, isActive: scheduleChanges[0].newState };
+            }
         }
-        if (activationTargets.length > 0) {
-            console.log('매월 자동 활성화:', activationTargets.map(i => i.name).join(', '));
+
+        return newItem;
+    });
+
+    // 실제로 변경된 경우에만 업데이트
+    const hasChanges = updatedItems.some((item, i) => item.isActive !== items[i].isActive);
+    if (hasChanges) {
+        if (process.env.NODE_ENV === 'development') {
+            updatedItems.forEach((item, i) => {
+                if (item.isActive !== items[i].isActive) {
+                    console.log(`스케줄링: ${item.name} → ${item.isActive ? '활성화' : '비활성화'}`);
+                }
+            });
         }
-        if (deactivationTargets.length > 0) {
-            console.log('매월 자동 비활성화:', deactivationTargets.map(i => i.name).join(', '));
-        }
-      }
-
-      // 변경사항 적용
-      const updatedItems = items.map(item => {
-          let newItem = item;
-          let changed = false;
-
-          // 1. 스케줄링 적용 (레거시/복합 스케줄링)
-          if (item.hasSchedule) {
-             const scheduleChange = scheduleChanges.find(c => c.item.id === item.id);
-             if (scheduleChange) {
-                 newItem = { ...newItem, isActive: scheduleChange.newState };
-                 changed = true;
-             }
-          }
-
-          // 2. 매월 자동 활성화 (Recurring)
-          if (!newItem.isActive && newItem.activationDay === todayDay) {
-              newItem = { ...newItem, isActive: true };
-              changed = true;
-          }
-
-          // 3. 매월 자동 비활성화 (Recurring)
-          if (newItem.isActive && newItem.deactivationDay === todayDay) {
-              newItem = { ...newItem, isActive: false };
-              changed = true;
-          }
-
-          return newItem;
-      });
-
-      // 실제로 변경된 경우에만 업데이트
-      if (JSON.stringify(items) !== JSON.stringify(updatedItems)) {
-          set({ items: updatedItems });
-          setTimeout(() => {
+        set({ items: updatedItems });
+        setTimeout(() => {
             get().calculateTotals();
-          }, 0);
-      }
+        }, 0);
     }
   },
 

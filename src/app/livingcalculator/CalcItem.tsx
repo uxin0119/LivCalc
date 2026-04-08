@@ -12,6 +12,144 @@ import SortableItem, { SortableItemRenderProps } from "@/app/common/components/S
 import { TokenStyles } from '@/app/common/tokens/TokenStyles';
 
 /**
+ * 월간 자동화 타임라인 바 컴포넌트
+ */
+const MonthTimeline = ({ activationDay, deactivationDay, isActive }: { activationDay?: number; deactivationDay?: number; isActive?: boolean }) => {
+    if (!activationDay && !deactivationDay) return null;
+
+    const today = new Date().getDate();
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+
+    const getBarColor = (day: number) => {
+        if (activationDay && deactivationDay) {
+            if (activationDay < deactivationDay) {
+                // 예: 5일 활성화 ~ 20일 비활성화 → 5~19일 활성
+                return day >= activationDay && day < deactivationDay ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600';
+            } else if (activationDay > deactivationDay) {
+                // 예: 20일 활성화 ~ 5일 비활성화 → 20~31, 1~4일 활성 (wrap)
+                return day >= activationDay || day < deactivationDay ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600';
+            } else {
+                // 같은 날: 활성화 후 바로 비활성화 → 사실상 비활성
+                return 'bg-gray-300 dark:bg-gray-600';
+            }
+        } else if (activationDay) {
+            // 활성화만 설정: 해당 일에 활성화
+            return day === activationDay ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700';
+        } else if (deactivationDay) {
+            // 비활성화만 설정: 해당 일에 비활성화
+            return day === deactivationDay ? 'bg-red-500' : 'bg-gray-200 dark:bg-gray-700';
+        }
+        return 'bg-gray-200 dark:bg-gray-700';
+    };
+
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-1.5 h-5">
+                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
+                    <div
+                        key={day}
+                        className={`flex-1 rounded-sm transition-all duration-200 ${getBarColor(day)} ${
+                            day === today ? 'ring-2 ring-blue-400 ring-offset-1 dark:ring-offset-gray-800 h-5' : 'h-3'
+                        } ${day === activationDay ? 'ring-1 ring-green-400' : ''} ${day === deactivationDay ? 'ring-1 ring-red-400' : ''}`}
+                        title={`${day}일${day === today ? ' (오늘)' : ''}${day === activationDay ? ' - 활성화' : ''}${day === deactivationDay ? ' - 비활성화' : ''}`}
+                    />
+                ))}
+            </div>
+            <div className="flex justify-between text-[10px] text-gray-400 px-0.5">
+                <span>1일</span>
+                <span>{today}일 (오늘)</span>
+                <span>{daysInMonth}일</span>
+            </div>
+        </div>
+    );
+};
+
+/**
+ * 월간 자동화 상태 요약 컴포넌트
+ */
+const ScheduleStatusSummary = ({ activationDay, deactivationDay, isActive }: { activationDay?: number; deactivationDay?: number; isActive?: boolean }) => {
+    if (!activationDay && !deactivationDay) return null;
+
+    const today = new Date().getDate();
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+
+    const getDaysUntil = (targetDay: number) => {
+        if (targetDay > today) return targetDay - today;
+        return daysInMonth - today + targetDay; // 다음 달로 넘어감
+    };
+
+    // 충돌 경고
+    if (activationDay && deactivationDay && activationDay === deactivationDay) {
+        return (
+            <div className="flex items-center gap-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                    활성화일과 비활성화일이 같습니다. 같은 날 활성화 후 바로 비활성화됩니다.
+                </span>
+            </div>
+        );
+    }
+
+    const lines: { icon: string; text: string; color: string }[] = [];
+
+    if (activationDay) {
+        const daysUntil = getDaysUntil(activationDay);
+        const isToday = activationDay === today;
+        lines.push({
+            icon: '▲',
+            text: isToday ? '오늘 자동 활성화됨' : `매월 ${activationDay}일 활성화 (${daysUntil}일 후)`,
+            color: isToday ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-green-600 dark:text-green-400',
+        });
+    }
+
+    if (deactivationDay) {
+        const daysUntil = getDaysUntil(deactivationDay);
+        const isToday = deactivationDay === today;
+        lines.push({
+            icon: '▼',
+            text: isToday ? '오늘 자동 비활성화됨' : `매월 ${deactivationDay}일 비활성화 (${daysUntil}일 후)`,
+            color: isToday ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-red-600 dark:text-red-400',
+        });
+    }
+
+    // 활성 기간 설명
+    if (activationDay && deactivationDay && activationDay !== deactivationDay) {
+        if (activationDay < deactivationDay) {
+            lines.push({
+                icon: '◈',
+                text: `활성 기간: 매월 ${activationDay}일 ~ ${deactivationDay}일`,
+                color: 'text-gray-500 dark:text-gray-400',
+            });
+        } else {
+            lines.push({
+                icon: '◈',
+                text: `활성 기간: 매월 ${activationDay}일 ~ 다음달 ${deactivationDay}일`,
+                color: 'text-gray-500 dark:text-gray-400',
+            });
+        }
+    }
+
+    return (
+        <div className="p-2.5 bg-gray-100 dark:bg-gray-700/50 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 mb-1.5">
+                <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    현재: {isActive ? '활성' : '비활성'}
+                </span>
+            </div>
+            {lines.map((line, i) => (
+                <div key={i} className={`flex items-center gap-1.5 text-xs ${line.color}`}>
+                    <span className="w-3 text-center">{line.icon}</span>
+                    <span>{line.text}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+/**
  * 드래그 가능한 아이템 인터페이스
  */
 interface CalcItemProps {
@@ -200,6 +338,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             </div>
                         )}
                     </div>
+
+                    {/* 타임라인 시각화 & 상태 요약 */}
+                    {(item.activationDay || item.deactivationDay) && (
+                        <>
+                            <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+                            <MonthTimeline activationDay={item.activationDay} deactivationDay={item.deactivationDay} isActive={item.isActive} />
+                            <ScheduleStatusSummary activationDay={item.activationDay} deactivationDay={item.deactivationDay} isActive={item.isActive} />
+                        </>
+                    )}
 
                     <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
 

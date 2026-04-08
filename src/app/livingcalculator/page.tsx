@@ -28,7 +28,7 @@ export default function LivingCalculatorPage() {
         return [...categories].sort((a, b) => a.order - b.order);
     }, [categories]);
 
-    // 1. 초기 데이터 로드 (로컬 + 서버)
+    // 1. 초기 데이터 로드 (로컬 + 서버) → 완료 후 스케줄링 적용
     useEffect(() => {
         const initData = async () => {
             // 먼저 로컬/URL 데이터 로드
@@ -53,21 +53,22 @@ export default function LivingCalculatorPage() {
                         setSyncStatus('synced');
                         setLastSavedTime(new Date());
                     } else {
-                        // 데이터가 없으면 '동기화됨'으로 간주 (새로운 시작)
                         setSyncStatus('synced');
                     }
                 } catch (error) {
                     console.error('Auto-load failed:', error);
-                    // 실패해도 사용자에게 방해되지 않도록 조용히 처리하거나 에러 표시
                     setSyncStatus('error');
                 }
             } else {
-                setSyncStatus('synced'); // 비로그인 상태면 로컬만 쓰므로 synced로 간주
+                setSyncStatus('synced');
             }
+
+            // 모든 데이터 로드 완료 후 스케줄링 적용 (서버 데이터 덮어쓰기 이후)
+            checkAndApplyScheduling();
         };
 
         initData();
-    }, [status, loadFirstLivingData, setItems, setCategories]);
+    }, [status, loadFirstLivingData, setItems, setCategories, checkAndApplyScheduling]);
 
     // 2. 자동 저장 (Auto-Save with Debounce)
     useEffect(() => {
@@ -123,29 +124,28 @@ export default function LivingCalculatorPage() {
         };
     }, [items, categories, status, isInitialLoad, dailyAvailable, monthTotal, settlementDay]);
 
-    // 3. 스케줄링 체크
+    // 3. 자정 스케줄링 타이머 (날짜 변경 시 자동 적용)
     useEffect(() => {
-        if (items.length > 0) {
-            checkAndApplyScheduling();
-        }
-
         const now = new Date();
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(0, 0, 0, 0);
 
         const msUntilTomorrow = tomorrow.getTime() - now.getTime();
+        let intervalId: NodeJS.Timeout | null = null;
 
         const timeoutId = setTimeout(() => {
             checkAndApplyScheduling();
-            const intervalId = setInterval(() => {
+            intervalId = setInterval(() => {
                 checkAndApplyScheduling();
             }, 24 * 60 * 60 * 1000);
-            return () => clearInterval(intervalId);
         }, msUntilTomorrow);
 
-        return () => clearTimeout(timeoutId);
-    }, [items.length, checkAndApplyScheduling]);
+        return () => {
+            clearTimeout(timeoutId);
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [checkAndApplyScheduling]);
 
     // 상태 아이콘 렌더링
     const renderSyncStatus = () => {
