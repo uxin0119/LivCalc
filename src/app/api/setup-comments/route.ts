@@ -13,6 +13,7 @@ export async function GET() {
         comment TEXT NOT NULL,
         PRIMARY KEY (type, object_id, sub_id)
       );
+      ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
     `;
 
     await query(sql);

@@ -10,3 +10,6 @@ CREATE TABLE IF NOT EXISTS calendar_memos (
 );
 
 CREATE INDEX IF NOT EXISTS idx_calendar_memos_user_date ON calendar_memos(user_id, memo_date);
+
+-- RLS 활성화
+ALTER TABLE calendar_memos ENABLE ROW LEVEL SECURITY;

@@ -12,3 +12,6 @@ CREATE TABLE IF NOT EXISTS calculator_logs (
 -- 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_calculator_logs_user_date ON calculator_logs(user_id, log_date);
 CREATE INDEX IF NOT EXISTS idx_calculator_logs_created_at ON calculator_logs(created_at);
+
+-- RLS 활성화
+ALTER TABLE calculator_logs ENABLE ROW LEVEL SECURITY;
