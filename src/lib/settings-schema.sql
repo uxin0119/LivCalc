@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS site_settings (
   updated_by UUID REFERENCES users(id)
 );
 
+-- RLS 활성화
+ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+
 -- 초기 데이터 삽입 (없을 경우)
 -- calendar_retention_period: 데이터 보관 기간 (개월 단위)
 INSERT INTO site_settings (key, value) VALUES ('calendar_retention_period', '2') ON CONFLICT DO NOTHING;
